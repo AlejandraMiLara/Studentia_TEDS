@@ -9,8 +9,8 @@
 
     {% if user.is_authenticated %}
     <ul>
-        <li>Hola, @{{ user.username }}</li>
         <li><a href="/">Inicio</a></li>
+        <li><a href="/logout">Cerrar Sesión</a></li>
     </ul>
 {% else %}
     <ul>

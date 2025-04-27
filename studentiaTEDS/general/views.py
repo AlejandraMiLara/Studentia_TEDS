@@ -22,3 +22,7 @@ def iniciar_sesion(request):
         else:
             msj = "Correo o contraseña incorrectas. Intente de nuevo"
     return render(request, 'iniciar_sesion.html', {'msj':msj})
+
+def salir(request):
+    logout(request)
+    return redirect('inicio')
