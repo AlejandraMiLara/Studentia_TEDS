@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studentia</title>
+</head>
+<body>
+
+    {% if user.is_authenticated %}
+    <ul>
+        <li>Hola, @{{ user.username }}</li>
+        <li><a href="/">Inicio</a></li>
+    </ul>
+{% else %}
+    <ul>
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/login">Iniciar Sesión</a></li>
+    </ul>
+{% endif %}
+    
+    {% block content %}
+    {% endblock %}
+</body>
+</html>
