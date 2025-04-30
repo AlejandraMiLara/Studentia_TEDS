@@ -4,27 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Studentia</title>
-<<<<<<< HEAD
-</head>
-<body>
-
-    {% if user.is_authenticated %}
-    <ul>
-        Hola, @{{ user.username }}
-        <li><a href="/">Inicio</a></li>
-        <li><a href="/logout">Cerrar Sesión</a></li>
-    </ul>
-{% else %}
-    <ul>
-        <li><a href="/">Inicio</a></li>
-        <li><a href="/login">Iniciar Sesión</a></li>
-        <li><a href="/signup">Registrarse</a></li>
-    </ul>
-{% endif %}
-    
-    {% block content %}
-    {% endblock %}
-=======
     {% load static %}
     {% block styles %}
     {% endblock %}
@@ -123,6 +102,5 @@
 
     {% block scripts %}
     {% endblock %}
->>>>>>> main
 </body>
 </html>
