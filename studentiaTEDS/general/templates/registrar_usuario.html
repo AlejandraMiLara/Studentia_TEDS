@@ -6,20 +6,20 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <style>
         .custom-section {
-            background: #FFFFFF; /* Fondo blanco como en la imagen */
+            background: #FFFFFF;
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
         .custom-title {
-            color: #1A3C5A !important; /* Azul oscuro de la imagen */
+            color: #1A3C5A !important;
             font-size: 2.8rem !important;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
         }
         .custom-form p input,
         .custom-form p select,
         .custom-form p textarea {
-            border: 2px solid #1A3C5A !important; /* Borde azul oscuro de la imagen */
+            border: 2px solid #1A3C5A !important;
             border-radius: 8px !important;
             padding: 12px !important;
             width: 100% !important;
@@ -28,16 +28,16 @@
         .custom-form p input:focus,
         .custom-form p select:focus,
         .custom-form p textarea:focus {
-            border-color: #FF5733 !important; /* Naranja al hacer foco, como el hover de la imagen */
+            border-color: #FF5733 !important;
             outline: none !important;
         }
         .custom-form p label {
-            color: #4A4A4A !important; /* Gris oscuro para etiquetas, como el texto secundario de la imagen */
+            color: #4A4A4A !important;
             font-weight: 600 !important;
             font-size: 1.1rem !important;
         }
         .custom-button {
-            background-color: #1A3C5A !important; /* Botón azul oscuro de la imagen */
+            background-color: #1A3C5A !important;
             border: none !important;
             padding: 12px 30px !important;
             font-size: 1.2rem !important;
@@ -45,14 +45,19 @@
             transition: background-color 0.3s ease !important;
         }
         .custom-button:hover {
-            background-color: #FF5733 !important; /* Naranja al pasar el mouse, como en la imagen */
+            background-color: #FF5733 !important;
+        }
+        .error-message {
+            color: red;
+            display: none;
+            font-size: 0.9rem;
+            margin-top: 5px;
         }
     </style>
 {% endblock %}
 
 {% block content %}
-<!-- Contact Section -->
-<section class="w3l-contact-section py-5" style="background-color: #F5F8FF;"> <!-- Fondo claro de la imagen -->
+<section class="w3l-contact-section py-5" style="background-color: #F5F8FF;">
     <div class="container py-md-5 py-4">
         <div class="title-main text-center mx-auto mb-5">
             <h3 class="title-subhny custom-title">Registrarse</h3>
@@ -72,9 +77,26 @@
 
                     <form method="POST" class="contact-form custom-form" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <div class="form-group mb-4">
-                            {{ form.as_p }}
-                        </div>
+                        <p>
+                            {{ form.username.label_tag }}
+                            {{ form.username }}
+                            <small class="error-message">Este campo es obligatorio.</small>
+                        </p>
+                        <p>
+                            {{ form.email.label_tag }}
+                            {{ form.email }}
+                            <small class="error-message">Por favor ingresa un correo válido.</small>
+                        </p>
+                        <p>
+                            {{ form.password1.label_tag }}
+                            {{ form.password1 }}
+                            <small class="error-message">La contraseña debe tener al menos 8 caracteres.</small>
+                        </p>
+                        <p>
+                            {{ form.password2.label_tag }}
+                            {{ form.password2 }}
+                            <small class="error-message">Las contraseñas deben coincidir.</small>
+                        </p>
                         <div class="text-center">
                             <button type="submit" class="btn btn-style btn-primary custom-button">Registrarse</button>
                         </div>
@@ -84,5 +106,45 @@
         </div>
     </div>
 </section>
-<!-- //Contact Section -->
+
+<script>
+    const password1 = document.querySelector('input[name="password1"]');
+    const password2 = document.querySelector('input[name="password2"]');
+
+    document.querySelectorAll('input').forEach(input => {
+        const errorMessage = input.parentElement.querySelector('.error-message');
+        let touched = false;
+
+        input.addEventListener('blur', () => {
+            touched = true;
+            validate(input, errorMessage);
+        });
+
+        input.addEventListener('input', () => {
+            if (touched) {
+                validate(input, errorMessage);
+            }
+        });
+
+        function validate(field, errorEl) {
+            if (field.name === "password1") {
+                if (field.value.length < 8) {
+                    errorEl.style.display = 'block';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            } else if (field.name === "password2") {
+                if (field.value !== password1.value) {
+                    errorEl.style.display = 'block';
+                } else {
+                    errorEl.style.display = 'none';
+                }
+            } else if (field.value.trim() === "") {
+                errorEl.style.display = 'block';
+            } else {
+                errorEl.style.display = 'none';
+            }
+        }
+    });
+</script>
 {% endblock %}
