@@ -79,9 +79,9 @@
                         <p>
                             {{ form.email.label_tag }}
                             {{ form.email }}
-                            <small class="error-message">Por favor ingresa un correo válido.</small>
-                        </p>
-
+                            <small class="error-message" id="email-error" style="display:none; color: red;">Por favor ingresa un correo válido.</small>
+                        </p>                        
+                        
                         <p>
                             {{ form.rol.label_tag }}
                             {{ form.rol }}
@@ -156,4 +156,56 @@
         }
     });
 </script>
+
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.querySelector('form');
+    const emailField = form.querySelector('input[type="email"]');
+    const errorMessage = document.getElementById('email-error');
+
+    // Expresión regular para validar el correo electrónico
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    // Validación en tiempo real mientras el usuario escribe
+    emailField.addEventListener('input', function () {
+        const emailValue = emailField.value.trim();
+        if (emailRegex.test(emailValue)) {
+            errorMessage.style.display = 'none'; // Oculta el mensaje de error
+            emailField.style.borderColor = '#1A3C5A'; // Restaura el borde original (color azul)
+        } else {
+            errorMessage.style.display = 'block'; // Muestra el mensaje de error
+            errorMessage.textContent = 'Por favor ingresa un correo electrónico válido (sin espacios y sin caracteres no permitidos).';
+            emailField.style.borderColor = 'red'; // Borde rojo mientras no sea válido
+        }
+    });
+
+    // Validación antes de enviar el formulario
+    form.addEventListener('submit', function(event) {
+        const emailValue = emailField.value.trim();
+
+        // Si el correo es inválido, muestra el error y evita el envío del formulario
+        if (!emailRegex.test(emailValue)) {
+            event.preventDefault();
+            errorMessage.style.display = 'block'; // Asegúrate de que el mensaje se muestre
+            errorMessage.textContent = 'Por favor ingresa un correo electrónico válido (sin espacios y sin caracteres no permitidos).';
+            emailField.style.borderColor = 'red'; // Borde rojo al enviar si es inválido
+        }
+    });
+
+    // Evitar que el mensaje de error se borre cuando el campo pierde el foco
+    emailField.addEventListener('blur', function() {
+        if (!emailRegex.test(emailField.value.trim())) {
+            errorMessage.style.display = 'block'; // Asegúrate de que el mensaje permanezca visible
+            emailField.style.borderColor = 'red'; // Mantener el borde rojo
+        }
+    });
+});
+
+
+
+</script>
+
+
 {% endblock %}

@@ -3,7 +3,10 @@ from django.contrib.auth.forms import UserCreationForm
 from .models import UsuarioPersonalizado
 
 class RegistroUsuarioForm(UserCreationForm):
-    email = forms.EmailField(required=True)
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'type': 'email', 'placeholder': 'Ingresa tu correo electrónico'})
+    )
 
     class Meta:
         model = UsuarioPersonalizado
