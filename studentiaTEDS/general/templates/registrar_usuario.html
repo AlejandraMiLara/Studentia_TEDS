@@ -66,7 +66,7 @@
             <div class="col-lg-6 col-md-8">
                 <div class="custom-section">
                     {% if form.errors %}
-                        <div class="alert alert-danger mb-4">
+                        <div id="error-login" class="alert alert-danger mb-4">
                             {% for field, errors in form.errors.items %}
                                 {% for error in errors %}
                                     {{ error }}<br>
@@ -110,8 +110,9 @@
 <script>
     const password1 = document.querySelector('input[name="password1"]');
     const password2 = document.querySelector('input[name="password2"]');
+    const errorLogin = document.getElementById('error-login');
 
-    document.querySelectorAll('input').forEach(input => {
+    document.querySelectorAll('input, select, textarea').forEach(input => {
         const errorMessage = input.parentElement.querySelector('.error-message');
         let touched = false;
 
@@ -124,25 +125,18 @@
             if (touched) {
                 validate(input, errorMessage);
             }
+            if (errorLogin) {
+                errorLogin.remove();
+            }
         });
 
         function validate(field, errorEl) {
             if (field.name === "password1") {
-                if (field.value.length < 8) {
-                    errorEl.style.display = 'block';
-                } else {
-                    errorEl.style.display = 'none';
-                }
+                errorEl.style.display = field.value.length < 8 ? 'block' : 'none';
             } else if (field.name === "password2") {
-                if (field.value !== password1.value) {
-                    errorEl.style.display = 'block';
-                } else {
-                    errorEl.style.display = 'none';
-                }
-            } else if (field.value.trim() === "") {
-                errorEl.style.display = 'block';
+                errorEl.style.display = field.value !== password1.value ? 'block' : 'none';
             } else {
-                errorEl.style.display = 'none';
+                errorEl.style.display = field.value.trim() === "" ? 'block' : 'none';
             }
         }
     });
