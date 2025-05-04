@@ -14,6 +14,14 @@ from pathlib import Path
 
 SITE_ID = 1
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'studentiateds@gmail.com'
+EMAIL_HOST_PASSWORD = 'nrnalqqolmzsncte'
+DEFAULT_FROM_EMAIL = 'Studentia'
+
 
 AUTH_USER_MODEL = 'general.UsuarioPersonalizado'
 

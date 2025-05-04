@@ -8,6 +8,7 @@ import random
 import string
 from .forms import RegistroUsuarioForm
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 
 @login_required(login_url='iniciar_sesion')
 def inicio(request):
@@ -47,3 +48,19 @@ def registrar_usuario(request):
         form = RegistroUsuarioForm()
 
     return render(request, 'registrar_usuario.html', {'form': form})
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'recovery/password_reset.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form_submitted'] = self.request.method == 'POST'
+        return context
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'recovery/password_reset_confirm.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form_submitted'] = self.request.method == 'POST'
+        return context
