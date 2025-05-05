@@ -10,7 +10,7 @@ from .forms import RegistroUsuarioForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 
-@login_required(login_url='iniciar_sesion')
+
 def inicio(request):
     return render(request, 'inicio.html')
 
