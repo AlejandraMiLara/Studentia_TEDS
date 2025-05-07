@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Perfil {{alumno.username}} </h2>
+
+{% if alumno.foto_perfil %}
+    <img src="{{ alumno.foto_perfil.url }}" alt="Foto de perfil" width="150">
+{% else %}
+    <img src="/static/img/default_profile.png" alt="Sin foto de perfil" width="150">
+{% endif %}
+
+<ul>
+    <li><strong>Nombre de usuario:</strong> {{ alumno.username }}</li>
+    <li><strong>Email:</strong> {{ alumno.email }}</li>
+    <li><strong>Rol:</strong> {{ alumno.rol }}</li>
+    <li><strong>Sobre mí:</strong> {{ alumno.sobre_mi }}</li>
+</ul>
+
+<a href="#"> Reportar Usuario </a>
+
+
+{% endblock %}

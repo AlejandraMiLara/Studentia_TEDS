@@ -10,7 +10,7 @@
         <ul>
             {% for inscripcion in alumnos_inscritos %}
                 <li>
-                    {{ inscripcion.alumno.username }} ({{ inscripcion.alumno.email }}) 
+                    {{ inscripcion.alumno.username }} ({{ inscripcion.alumno.email }}) <a href="{% url 'other_profile' inscripcion.alumno.id %}" class="btn btn-secondary">Ver perfil</a>
                     {% if request.user == curso.id_profesor %}
                         <form action="{% url 'board_remove_student' curso.codigo_acceso inscripcion.alumno.id %}" method="post" style="display:inline;">
                             {% csrf_token %}

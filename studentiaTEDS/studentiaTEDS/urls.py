@@ -30,6 +30,7 @@ urlpatterns = [
     path("board/<str:codigo_acceso>/update", views.board_actualizar, name="board_actualizar"),
     path("board/<str:codigo_acceso>/view/students", views.board_view_students, name="board_view_students"),
     path("board/<str:codigo_acceso>/remove/<int:id_alumno>", views.board_remove_student, name="board_remove_student"),
+    path('profile/view/<int:id>', views.other_profile, name='other_profile'),
 
 
 ]

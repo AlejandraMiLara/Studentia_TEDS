@@ -228,3 +228,15 @@ def board_remove_student(request, codigo_acceso, id_alumno):
         AlumnoCurso.objects.filter(curso=curso, alumno_id=id_alumno).delete()
 
     return redirect('board_view_students', codigo_acceso=codigo_acceso)
+
+@login_required
+def other_profile(request, id):
+    usuario = request.user
+    alumno = get_object_or_404(UsuarioPersonalizado, id=id)
+
+    if usuario.id == alumno.id:
+       return redirect('ver_perfil')
+
+    return render(request, 'other_profile.html', {
+        'alumno':alumno
+    })
