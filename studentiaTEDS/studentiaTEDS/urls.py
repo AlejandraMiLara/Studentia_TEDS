@@ -21,6 +21,13 @@ urlpatterns = [
     #segundo sprint
     path('profile/', views.ver_perfil, name='ver_perfil'),
     path('profile/edit', views.editar_perfil, name='editar_perfil'),
+    path('new/course', views.crear_curso, name='crear_curso'),
+    path('dashboard/', views.dashboard, name='dashboard'),
+
+    path("board/<str:codigo_acceso>", views.board, name="board"),
+    path("board/<str:codigo_acceso>/leave", views.board_leave, name="board_leave"),
+    path("board/<str:codigo_acceso>/delete", views.board_borrar, name="board_borrar"),
+    path("board/<str:codigo_acceso>/update", views.board_actualizar, name="board_actualizar"),
 
 ]
 

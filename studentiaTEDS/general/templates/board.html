@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ curso.nombre_curso }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>{{ curso.nombre_curso }}</h2>
+    <p><strong>Profesor:</strong> {{ curso.id_profesor.username }}</p>
+    <p><strong>Descripción:</strong> {{ curso.descripcion }}</p>
+
+<!-- Aqui deberian ir las funciones rapidas -->
+
+    <h3>Tablero</h3>
+
+<!-- Aqui contenido del tablero -->
+    
+
+</div>
+{% endblock %}

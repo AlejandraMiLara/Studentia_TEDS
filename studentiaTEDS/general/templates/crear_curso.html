@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Curso{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Crear un nuevo curso</h2>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        <div>
+            <label for="{{ form.nombre_curso.id_for_label }}">Nombre del Curso:</label>
+            {{ form.nombre_curso }}
+        </div>
+
+        <div>
+            <label for="{{ form.descripcion.id_for_label }}">Descripción:</label>
+            {{ form.descripcion }}
+        </div>
+
+        <button type="submit">Crear Curso</button>
+    </form>
+</div>
+{% endblock %}

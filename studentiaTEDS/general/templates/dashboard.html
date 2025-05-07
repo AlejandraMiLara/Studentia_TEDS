@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Dashboard</h2>
+
+    {% if es_profesor %}
+        <h3>Mis Cursos Creados</h3>
+        <a href="{% url 'crear_curso' %}" class="btn btn-primary">Crear Nuevo Curso</a>
+        
+        {% if cursos_creados %}
+            <ul>
+                {% for curso in cursos_creados %}
+                    <li>
+                        <a href="{% url 'board' curso.codigo_acceso %}">{{ curso.nombre_curso }}</a>
+                        - Código: <strong>{{ curso.codigo_acceso }}</strong>
+                        <a href="{% url 'board_actualizar' curso.codigo_acceso %}" class="btn btn-warning btn-sm">Editar Configuración</a>
+                        <a href="{% url 'board_borrar' curso.codigo_acceso %}" class="btn btn-danger btn-sm">Eliminar</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nada por el momento.</p>
+        {% endif %}
+
+        <h3>Mis Cursos Inscritos</h3>
+        {% if cursos_inscritos %}
+            <ul>
+                {% for inscripcion in cursos_inscritos %}
+                    <li>
+                        <a href="#">{{ inscripcion.curso.nombre_curso }}</a>
+                        - Profesor: {{ inscripcion.curso.id_profesor.username }}
+                        <a href="#" class="btn btn-danger btn-sm">Salir del Curso</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nada por el momento.</p>
+        {% endif %}
+
+    {% else %}
+        <h3>Mis Cursos Inscritos</h3>
+        {% if cursos_inscritos %}
+            <ul>
+                {% for inscripcion in cursos_inscritos %}
+                    <li>
+                        <a href="{% url 'board' inscripcion.curso.codigo_acceso %}">{{ inscripcion.curso.nombre_curso }}</a>
+                        - Profesor: {{ inscripcion.curso.id_profesor.username }}
+                        <a href="{% url 'board_leave' inscripcion.curso.codigo_acceso %}" class="btn btn-danger btn-sm">Salir del Curso</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Nada por el momento.</p>
+        {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

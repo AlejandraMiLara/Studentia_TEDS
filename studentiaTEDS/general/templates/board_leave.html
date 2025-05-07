@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Salir del Curso{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Salir del Curso</h2>
+    <p>¿Estás seguro de que quieres salir del curso <strong>{{ curso.nombre_curso }}</strong>?</p>
+
+    <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sí, salir del curso</button>
+        <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

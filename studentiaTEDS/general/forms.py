@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import UsuarioPersonalizado
+from .models import UsuarioPersonalizado, Curso
 
 class RegistroUsuarioForm(UserCreationForm):
     email = forms.EmailField(
@@ -19,4 +19,12 @@ class EditarPerfilForm(forms.ModelForm):
 
         widgets = {
             'sobre_mi': forms.Textarea(attrs={'rows':4}),
+        }
+
+class CursoForm(forms.ModelForm):
+    class Meta:
+        model = Curso
+        fields = ['nombre_curso', 'descripcion']
+        widgets = {
+            'descripcion': forms.Textarea(attrs={'rows': 4}),
         }
