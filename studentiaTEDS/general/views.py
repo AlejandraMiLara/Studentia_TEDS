@@ -10,6 +10,7 @@ from .forms import RegistroUsuarioForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 
+#primer sprint
 
 def inicio(request):
     return render(request, 'inicio.html')
@@ -64,3 +65,9 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
         context = super().get_context_data(**kwargs)
         context['form_submitted'] = self.request.method == 'POST'
         return context
+    
+#segundo sprint
+
+@login_required
+def ver_perfil(request):
+    return render(request, 'perfil.html', {'usuario':request.user})

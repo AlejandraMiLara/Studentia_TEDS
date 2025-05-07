@@ -7,6 +7,7 @@ from django.contrib.auth import views as auth_views
 from general.views import CustomPasswordResetView, CustomPasswordResetConfirmView
 
 urlpatterns = [
+    #primer sprint
     path('admin/', admin.site.urls),
     path('', views.inicio, name='inicio'),
     path('login/', views.iniciar_sesion, name="iniciar_sesion"),
@@ -16,4 +17,12 @@ urlpatterns = [
     path('recovery/completo/', auth_views.PasswordResetCompleteView.as_view(template_name='recovery/password_reset_complete.html'), name='password_reset_complete'),
     path('recovery/', CustomPasswordResetView.as_view(), name='password_reset'),
     path('recovery/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    
+    #segundo sprint
+    path('profile/', views.ver_perfil, name='ver_perfil'),
+
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
