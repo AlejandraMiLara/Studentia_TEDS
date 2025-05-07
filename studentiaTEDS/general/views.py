@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 import random
 import string
-from .forms import RegistroUsuarioForm
+from .forms import RegistroUsuarioForm, EditarPerfilForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 
@@ -71,3 +71,15 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 @login_required
 def ver_perfil(request):
     return render(request, 'perfil.html', {'usuario':request.user})
+
+@login_required
+def editar_perfil(request):
+    if request.method == 'POST':
+        form = EditarPerfilForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('ver_perfil')
+    else:
+        form = EditarPerfilForm(instance=request.user)
+
+    return render(request, 'editar_perfil.html', {'form': form})
