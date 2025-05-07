@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Inscribirse en Curso{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Inscribirse en un Curso</h2>
+
+    {% if messages %}
+        <div>
+            {% for message in messages %}
+                <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Inscribirse</button>
+    </form>
+
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Volver al Dashboard</a>
+</div>
+{% endblock %}

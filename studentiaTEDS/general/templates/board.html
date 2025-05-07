@@ -9,7 +9,13 @@
     <p><strong>Profesor:</strong> {{ curso.id_profesor.username }}</p>
     <p><strong>Descripción:</strong> {{ curso.descripcion }}</p>
 
-<!-- Aqui deberian ir las funciones rapidas -->
+    {% if request.user == curso.id_profesor %}
+        <h3>Acciones Rápidas</h3>
+        <!-- Aqui va enlace de agregar contenido -->
+        <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="btn btn-info">Ver alumnos inscritos</a>
+    {% else %}
+        <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="btn btn-info">Ver alumnos inscritos</a>
+    {% endif %}
 
     <h3>Tablero</h3>
 

@@ -30,9 +30,9 @@
             <ul>
                 {% for inscripcion in cursos_inscritos %}
                     <li>
-                        <a href="#">{{ inscripcion.curso.nombre_curso }}</a>
+                        <a href="{% url 'board' inscripcion.curso.codigo_acceso %}">{{ inscripcion.curso.nombre_curso }}</a>
                         - Profesor: {{ inscripcion.curso.id_profesor.username }}
-                        <a href="#" class="btn btn-danger btn-sm">Salir del Curso</a>
+                        <a href="{% url 'board_leave' inscripcion.curso.codigo_acceso %}" class="btn btn-danger btn-sm">Salir del Curso</a>
                     </li>
                 {% endfor %}
             </ul>

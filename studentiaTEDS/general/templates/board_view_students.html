@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Alumnos - {{ curso.nombre_curso }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Alumnos Inscritos en {{ curso.nombre_curso }}</h2>
+
+    {% if alumnos_inscritos %}
+        <ul>
+            {% for inscripcion in alumnos_inscritos %}
+                <li>
+                    {{ inscripcion.alumno.username }} ({{ inscripcion.alumno.email }}) 
+                    {% if request.user == curso.id_profesor %}
+                        <form action="{% url 'board_remove_student' curso.codigo_acceso inscripcion.alumno.id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No hay alumnos inscritos aún.</p>
+    {% endif %}
+
+    <a href="{% url 'board' curso.codigo_acceso %}" class="btn btn-secondary">Volver al curso</a>
+</div>
+{% endblock %}

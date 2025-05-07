@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 import random
 import string
-from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm
+from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad
@@ -176,3 +176,55 @@ def board_actualizar(request, codigo_acceso):
     return render(request, 'board_actualizar.html', {
         'form':form, 'curso':curso
     })
+
+@login_required
+def inscribirse_curso(request):
+    if request.method == "POST":
+        form = InscripcionCursoForm(request.POST)
+        if form.is_valid():
+            codigo_acceso = form.cleaned_data["codigo_acceso"]
+
+            curso = Curso.objects.filter(codigo_acceso=codigo_acceso).first()
+
+            if not curso:
+                messages.error(request, "El curso no existe.")
+                return redirect("inscribirse_curso")
+
+            if curso.id_profesor == request.user:
+                messages.error(request, "No puedes inscribirte en tu propio curso.")
+                return redirect("inscribirse_curso")
+
+            if AlumnoCurso.objects.filter(curso=curso, alumno=request.user).exists():
+                messages.error(request, "Ya estás inscrito en este curso.")
+            else:
+                AlumnoCurso.objects.create(curso=curso, alumno=request.user)
+                #messages.success(request, f"Te has inscrito en {curso.nombre_curso} correctamente.")
+
+            return redirect("dashboard")
+
+    else:
+        form = InscripcionCursoForm()
+
+    return render(request, "inscribirse_curso.html", {"form": form})
+
+@login_required
+def board_view_students(request, codigo_acceso):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    alumnos_inscritos = AlumnoCurso.objects.filter(curso=curso).select_related('alumno')
+
+    return render(request, 'board_view_students.html', {
+        'curso':curso,
+        'alumnos_inscritos':alumnos_inscritos
+    })
+
+@login_required
+def board_remove_student(request, codigo_acceso, id_alumno):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+
+    if request.user != curso.id_profesor:
+        return redirect('dashboard')
+
+    if request.method == "POST":
+        AlumnoCurso.objects.filter(curso=curso, alumno_id=id_alumno).delete()
+
+    return redirect('board_view_students', codigo_acceso=codigo_acceso)

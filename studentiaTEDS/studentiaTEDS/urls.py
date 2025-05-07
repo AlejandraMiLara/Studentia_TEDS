@@ -23,11 +23,14 @@ urlpatterns = [
     path('profile/edit', views.editar_perfil, name='editar_perfil'),
     path('new/course', views.crear_curso, name='crear_curso'),
     path('dashboard/', views.dashboard, name='dashboard'),
-
+    path("course/join", views.inscribirse_curso, name="inscribirse_curso"),
     path("board/<str:codigo_acceso>", views.board, name="board"),
     path("board/<str:codigo_acceso>/leave", views.board_leave, name="board_leave"),
     path("board/<str:codigo_acceso>/delete", views.board_borrar, name="board_borrar"),
     path("board/<str:codigo_acceso>/update", views.board_actualizar, name="board_actualizar"),
+    path("board/<str:codigo_acceso>/view/students", views.board_view_students, name="board_view_students"),
+    path("board/<str:codigo_acceso>/remove/<int:id_alumno>", views.board_remove_student, name="board_remove_student"),
+
 
 ]
 

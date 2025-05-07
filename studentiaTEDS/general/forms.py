@@ -28,3 +28,6 @@ class CursoForm(forms.ModelForm):
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 4}),
         }
+
+class InscripcionCursoForm(forms.Form):
+    codigo_acceso = forms.CharField(label="Código de Curso", max_length=10, required=True)
