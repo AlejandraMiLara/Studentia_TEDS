@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Agregar Actividad - {{ curso.nombre_curso }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Agregar Actividad a {{ curso.nombre_curso }}</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Guardar Actividad</button>
+        <a href="{% url 'board' curso.codigo_acceso %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

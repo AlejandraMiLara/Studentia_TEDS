@@ -85,3 +85,42 @@ class Reporte(models.Model):
 
     def __str__(self):
         return f"{self.reportante.username} reportó a {self.reportado.username}"
+    
+class Actividad(models.Model):
+    docente = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='actividades_creadas'
+    )
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
+    fecha = models.DateTimeField(auto_now_add=True)
+    archivo = models.FileField(upload_to='actividades/', null=True, blank=True)
+    entregable = models.BooleanField(default=True)
+    generado_por_ia = models.BooleanField(default=False)
+    titulo = models.CharField(max_length=255)
+    contenido = models.TextField()
+    permite_entrega_tardia = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.titulo} - {self.curso.nombre_curso}"
+
+class Envio(models.Model):
+    alumno = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='envios_realizados'
+    )
+    docente = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='envios_recibidos'
+    )
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
+    actividad = models.ForeignKey(Actividad, on_delete=models.CASCADE)
+    fecha = models.DateTimeField(auto_now_add=True)
+    archivo = models.FileField(upload_to='envios/')
+    calificacion = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.alumno.username} envió {self.actividad.titulo}"
+

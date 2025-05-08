@@ -31,9 +31,10 @@ urlpatterns = [
     path("board/<str:codigo_acceso>/view/students", views.board_view_students, name="board_view_students"),
     path("board/<str:codigo_acceso>/remove/<int:id_alumno>", views.board_remove_student, name="board_remove_student"),
     path('profile/view/<int:id>', views.other_profile, name='other_profile'),
-
     path('report/student/<int:id>', views.report, name="report"),
-    path('report/student/success', views.report_success, name="report_success")
+    path('report/student/success', views.report_success, name="report_success"),
+    path("board/<str:codigo_acceso>/add/content", views.board_add_content, name="board_add_content"),
+
 
 ]
 

@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 import random
 import string
-from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm
+from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm, ActividadForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad
@@ -269,3 +269,26 @@ def report(request, id):
 def report_success(request):
     msj = "El reporte ha sido enviado. Nos pondremos en contacto contigo pronto"
     return render(request, 'report_success.html', {'msj':msj})
+
+@login_required
+def board_add_content(request, codigo_acceso):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+
+    if request.user != curso.id_profesor:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = ActividadForm(request.POST, request.FILES)
+        if form.is_valid():
+            actividad = form.save(commit=False)
+            actividad.curso = curso
+            actividad.docente = request.user
+            actividad.save()
+            return redirect('board', codigo_acceso=curso.codigo_acceso)
+    else:
+        form = ActividadForm()
+
+    return render(request, 'board_add_content.html', {
+        'curso': curso,
+        'form': form
+    })
