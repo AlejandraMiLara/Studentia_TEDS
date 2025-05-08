@@ -17,7 +17,7 @@
     <li><strong>Sobre mí:</strong> {{ alumno.sobre_mi }}</li>
 </ul>
 
-<a href="#"> Reportar Usuario </a>
+<a href="{% url 'report' alumno.id %}"> Reportar Usuario </a>
 
 
 {% endblock %}

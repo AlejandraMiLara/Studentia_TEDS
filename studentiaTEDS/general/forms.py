@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import UsuarioPersonalizado, Curso
+from .models import UsuarioPersonalizado, Curso, Reporte
 
 class RegistroUsuarioForm(UserCreationForm):
     email = forms.EmailField(
@@ -31,3 +31,8 @@ class CursoForm(forms.ModelForm):
 
 class InscripcionCursoForm(forms.Form):
     codigo_acceso = forms.CharField(label="Código de Curso", max_length=10, required=True)
+
+class ReportarForm(forms.ModelForm):
+    class Meta:
+        model = Reporte
+        fields = ['motivo']        

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import UsuarioPersonalizado, Curso, ConfiguracionCurso
+from .models import UsuarioPersonalizado, Curso, ConfiguracionCurso, Reporte
 
 # Register your models here.
 
@@ -32,3 +32,9 @@ class AlumnoCursoAdmin(admin.ModelAdmin):
 
 admin.site.register(Curso, CursoAdmin)
 admin.site.register(ConfiguracionCurso, ConfiguracionCursoAdmin)
+
+class ReporteAdmin(admin.ModelAdmin):
+    list_display = ('reportante', 'reportado', 'curso', 'motivo')
+    search_fields = ('reportante__username', 'reportado__username', 'curso__nombre_curso')
+
+admin.site.register(Reporte, ReporteAdmin)

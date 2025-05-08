@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 import random
 import string
-from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm
+from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad
@@ -240,3 +240,32 @@ def other_profile(request, id):
     return render(request, 'other_profile.html', {
         'alumno':alumno
     })
+
+@login_required
+def report(request, id):
+    usuario = request.user
+    alumno = get_object_or_404(UsuarioPersonalizado, id=id)
+
+    if request.method == "POST":
+        form = ReportarForm(request.POST)
+
+        if form.is_valid():
+            reporte = form.save(commit=False)
+
+            reporte.reportante = usuario
+            reporte.reportado = alumno
+            reporte.save()
+            return redirect('report_success')
+    else:
+        form = ReportarForm()
+
+    return render(request, 'report.html', {
+        'form':form,
+        'reportado':alumno,
+        'reportante': usuario
+    })
+
+@login_required
+def report_success(request):
+    msj = "El reporte ha sido enviado. Nos pondremos en contacto contigo pronto"
+    return render(request, 'report_success.html', {'msj':msj})

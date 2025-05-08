@@ -67,3 +67,21 @@ class Actividad(models.Model):
 
     def __str__(self):
         return f"{self.titulo} - {self.curso.nombre_curso}"
+    
+class Reporte(models.Model):
+    reportante = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='reportes_realizados'
+    )
+    reportado = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='reportes_recibidos'
+    )
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, null=True, blank=True)
+    motivo = models.TextField()
+    contenido = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.reportante.username} reportó a {self.reportado.username}"
