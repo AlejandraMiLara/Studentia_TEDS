@@ -1,54 +1,185 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load static humanize %}
 
 {% block title %}{{ curso.nombre_curso }}{% endblock %}
 
+{% block styles %}
+    <link href="//fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+        .custom-section {
+            background: #FFFFFF; /* Fondo blanco */
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 800px; /* Más ancho para listas */
+            margin: 0 auto;
+            text-align: center;
+        }
+        .custom-title {
+            color: #1A3C5A !important; /* Azul oscuro */
+            font-size: 2.8rem !important;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px; /* Espacio debajo del título */
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+        }
+        .custom-subtitle {
+            color: #1A3C5A !important; /* Azul oscuro */
+            font-size: 1.8rem !important;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+        .course-details {
+            color: #4A4A4A !important; /* Gris oscuro para texto secundario */
+            font-size: 1.1rem !important;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 10px;
+            text-align: left;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .course-details strong {
+            color: #1A3C5A !important; /* Azul oscuro para etiquetas */
+            font-weight: 600;
+        }
+        .activity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 auto;
+            max-width: 600px; /* Ancho similar al de "Mi Perfil" */
+            text-align: left;
+        }
+        .activity-list li {
+            color: #4A4A4A !important; /* Gris oscuro para texto secundario */
+            font-size: 1.1rem !important;
+            margin-bottom: 20px;
+            font-family: 'Poppins', sans-serif;
+            border-bottom: 1px solid #e0e0e0; /* Línea separadora */
+            padding-bottom: 15px;
+        }
+        .activity-list li strong {
+            color: #1A3C5A !important; /* Azul oscuro para títulos */
+            font-weight: 600;
+        }
+        .activity-list li a {
+            color: #1A3C5A !important; /* Azul oscuro para enlaces */
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .activity-list li a:hover {
+            color: #FF5733 !important; /* Naranja al hover */
+        }
+        .badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-family: 'Poppins', sans-serif;
+            margin-left: 5px;
+        }
+        .badge.bg-success {
+            background-color: #28a745 !important; /* Verde para "Entregable" o "Contenido" */
+            color: #FFFFFF !important;
+        }
+        .badge.bg-warning {
+            background-color: #F5A623 !important; /* Amarillo para "IA" */
+            color: #FFFFFF !important;
+        }
+        .text-muted {
+            color: #4A4A4A !important; /* Gris oscuro para timestamps */
+            font-size: 0.9rem !important;
+            font-family: 'Poppins', sans-serif;
+        }
+        .empty-message {
+            color: #4A4A4A !important; /* Gris oscuro */
+            font-size: 1.1rem !important;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 20px;
+        }
+        .custom-button {
+            background-color: #1A3C5A !important; /* Botón azul oscuro */
+            border: none !important;
+            padding: 12px 30px !important;
+            font-size: 1.2rem !important;
+            border-radius: 25px !important;
+            transition: background-color 0.3s ease !important;
+            color: #FFFFFF !important; /* Texto blanco */
+            text-decoration: none !important;
+            display: inline-block;
+            margin: 5px; /* Espacio entre botones */
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+        .custom-button:hover {
+            background-color: #FF5733 !important; /* Naranja al hover */
+        }
+        .custom-button--sm {
+            padding: 8px 20px !important; /* Tamaño más pequeño para botones en línea */
+            font-size: 1rem !important;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2>{{ curso.nombre_curso }}</h2>
-    <p><strong>Profesor:</strong> {{ curso.id_profesor.username }}</p>
-    <p><strong>Descripción:</strong> {{ curso.descripcion }}</p>
+<section class="w3l-contact-section py-5" style="background-color: #F5F8FF;">
+    <div class="container py-md-5 py-4">
+        <div class="text-center">
+            <div class="custom-section">
+                <h2 class="custom-title">{{ curso.nombre_curso }}</h2>
+                <p class="course-details"><strong>Profesor:</strong> {{ curso.id_profesor.username }}</p>
+                <p class="course-details"><strong>Descripción:</strong> {{ curso.descripcion }}</p>
 
-    {% if request.user == curso.id_profesor %}
-        <h3>Acciones Rápidas</h3>
-        <a href="{% url 'board_add_content' curso.codigo_acceso %}" class="btn btn-info">Agregar Contenido</a>
-        <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="btn btn-info">Ver alumnos inscritos</a>
-    {% else %}
-        <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="btn btn-info">Ver alumnos inscritos</a>
-    {% endif %}
+                {% if request.user == curso.id_profesor %}
+                    <h3 class="custom-subtitle">Acciones Rápidas</h3>
+                    <a href="{% url 'board_add_content' curso.codigo_acceso %}" class="custom-button">Agregar Contenido</a>
+                    <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="custom-button">Ver alumnos inscritos</a>
+                {% else %}
+                    <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="custom-button">Ver alumnos inscritos</a>
+                {% endif %}
 
-    <h3>Tablero</h3>
+                <h3 class="custom-subtitle">Tablero</h3>
 
-    {% if actividades %}
-        <ul>
-            {% for act in actividades %}
-                <li>
-                    <strong>{{ act.titulo }}</strong> 
-                    {% if act.archivo %}
-                        - <a href="{{ act.archivo.url }}" target="_blank">Ver archivo</a>
-                    {% endif %}
-                    {% if act.entregable %}
-                        <span class="badge bg-success">Entregable</span>
-                    {% else %}
-                        <span class="badge bg-success">Contenido</span>
-                    {% endif %}
-                    {% if act.generado_por_ia %}
-                        <span class="badge bg-warning text-dark">IA</span>
-                    {% endif %}
+                {% if actividades %}
+                    <ul class="activity-list">
+                        {% for act in actividades %}
+                            <li>
+                                <strong>{{ act.titulo }}</strong> 
+                                {% if act.archivo %}
+                                    - <a href="{{ act.archivo.url }}" target="_blank">Ver archivo</a>
+                                {% endif %}
+                                {% if act.entregable %}
+                                    <span class="badge bg-success">Entregable</span>
+                                {% else %}
+                                    <span class="badge bg-success">Contenido</span>
+                                {% endif %}
+                                {% if act.generado_por_ia %}
+                                    <span class="badge bg-warning text-dark">IA</span>
+                                {% endif %}
+                                <br>
+                                <small class="text-muted">
+                                    Publicado {{ act.fecha|naturaltime }} {{ act.fecha|date:'d M Y, H:i' }}.
+                                </small>
+                                {% if request.user == curso.id_profesor %}
+                                    <div class="mt-2">
+                                        <a href="{% url 'board_edit_content' curso.codigo_acceso act.id %}" class="custom-button custom-button--sm">Editar</a>
+                                        <a href="{% url 'board_delete_content' curso.codigo_acceso act.id %}" class="custom-button custom-button--sm">Eliminar</a>
+                                    </div>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-message">No hay actividades aún.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
 
-                    <br>
-                    <small class="text-muted">
-                        Publicado {{ act.fecha|naturaltime }} {{ act.fecha|date:'d M Y, H:i' }}.
-                    </small>
-
-                    <!-- Aqui van los enlaces de EDIT Y DELETE -->
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>No hay actividades aún.</p>
-    {% endif %}
-    
-
-</div>
+{% block scripts %}
+    {{ block.super }}
 {% endblock %}

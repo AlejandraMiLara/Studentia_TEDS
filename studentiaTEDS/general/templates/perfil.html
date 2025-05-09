@@ -1,23 +1,82 @@
 {% extends 'base.html' %}
+{% load static %}
+{% block styles %}
+    <link href="//fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,700;1,400;1,600&display=swap" rel="stylesheet">
+     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+        .custom-section {
+            background: #FFFFFF; /* Fondo blanco como en la imagen */
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .custom-title {
+            color: #1A3C5A !important; /* Azul oscuro de la imagen */
+            font-size: 2.8rem !important;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        ul li {
+            color: #4A4A4A !important; /* Gris oscuro para texto secundario, como en la imagen */
+            font-size: 1.1rem !important;
+            margin-bottom: 10px;
+        }
+        ul li strong {
+            color: #1A3C5A !important; /* Azul oscuro para los títulos de los ítems */
+        }
+        img {
+            border-radius: 50%;
+            margin-bottom: 20px;
+        }
+        .custom-button {
+            background-color: #1A3C5A !important; /* Botón azul oscuro de la imagen */
+            border: none !important;
+            padding: 12px 30px !important;
+            font-size: 1.2rem !important;
+            border-radius: 25px !important;
+            transition: background-color 0.3s ease !important;
+            color: #FFFFFF !important;
+            text-decoration: none !important;
+            display: inline-block;
+        }
+        .custom-button:hover {
+            background-color: #FF5733 !important; /* Naranja al pasar el mouse, como en la imagen */
+        }
+    </style>
+{% endblock %}
 
 {% block content %}
+<section class="w3l-contact-section py-5" style="background-color: #F5F8FF;">
+  <div class="container py-md-5 py-4">
+    <div class="text-center">
+      <div class="custom-section">
+        <h2 class="custom-title">Mi Perfil</h2>
 
-<h2>Mi Perfil</h2>
+        {% if usuario.foto_perfil %}
+            <img src="{{ usuario.foto_perfil.url }}" alt="Foto de perfil" width="150">
+        {% else %}
+            <img src="/static/img/default_profile.png" alt="Sin foto de perfil" width="150">
+        {% endif %}
 
-{% if usuario.foto_perfil %}
-    <img src="{{ usuario.foto_perfil.url }}" alt="Foto de perfil" width="150">
-{% else %}
-    <img src="/static/img/default_profile.png" alt="Sin foto de perfil" width="150">
-{% endif %}
+        <ul>
+            <li><strong>Nombre de usuario:</strong> {{ usuario.username }}</li>
+            <li><strong>Email:</strong> {{ usuario.email }}</li>
+            <li><strong>Rol:</strong> {{ usuario.rol }}</li>
+            <li><strong>Sobre mí:</strong> {{ usuario.sobre_mi }}</li>
+        </ul>
 
-<ul>
-    <li><strong>Nombre de usuario:</strong> {{ usuario.username }}</li>
-    <li><strong>Email:</strong> {{ usuario.email }}</li>
-    <li><strong>Rol:</strong> {{ usuario.rol }}</li>
-    <li><strong>Sobre mí:</strong> {{ usuario.sobre_mi }}</li>
-</ul>
+        <a href="{% url 'editar_perfil' %}" class="custom-button mt-3">Editar Perfil</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
 
-<a href="{% url 'editar_perfil' %}">Editar Perfil</a>
-
-
+{% block scripts %}
+    {{ block.super }}
 {% endblock %}
