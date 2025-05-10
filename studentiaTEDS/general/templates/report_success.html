@@ -68,14 +68,6 @@
                     <p class="message">{{ msj }}</p>
                 {% endif %}
 
-                <p class="user-info"><strong>Usuario reportante:</strong> {{ reportante.username }}</p>
-                <p class="user-info"><strong>Usuario reportado:</strong> {{ reportado.username }}</p>
-
-                <form method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit">Enviar Reporte</button>
-                </form>
             </div>
         </div>
     </div>

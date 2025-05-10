@@ -8,19 +8,19 @@
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <style>
         .custom-section {
-            background: #FFFFFF; /* Fondo blanco */
+            background: #FFFFFF;
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-width: 800px; /* Más ancho para listas */
+            max-width: 800px;
             margin: 0 auto;
             text-align: center;
         }
         .custom-title {
-            color: #1A3C5A !important; /* Azul oscuro */
+            color: #1A3C5A !important;
             font-size: 2.8rem !important;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px; /* Espacio debajo del título */
+            margin-bottom: 30px;
             font-family: 'Poppins', sans-serif;
             font-weight: 700;
         }
@@ -28,51 +28,56 @@
             list-style: none;
             padding: 0;
             margin: 0 auto;
-            max-width: 600px; /* Ancho similar al de "Mi Perfil" */
+            max-width: 600px;
             text-align: left;
         }
         .student-list li {
-            color: #4A4A4A !important; /* Gris oscuro para texto secundario */
+            color: #4A4A4A !important;
             font-size: 1.1rem !important;
             margin-bottom: 15px;
             font-family: 'Poppins', sans-serif;
-            border-bottom: 1px solid #e0e0e0; /* Línea separadora */
+            border-bottom: 1px solid #e0e0e0;
             padding-bottom: 15px;
         }
         .student-list li a {
-            color: #1A3C5A !important; /* Azul oscuro para enlaces */
             text-decoration: none;
-            font-weight: 500;
-        }
-        .student-list li a:hover {
-            color: #FF5733 !important; /* Naranja al hover */
         }
         .empty-message {
-            color: #4A4A4A !important; /* Gris oscuro */
+            color: #4A4A4A !important;
             font-size: 1.1rem !important;
             font-family: 'Poppins', sans-serif;
             margin-bottom: 20px;
         }
         .custom-button {
-            background-color: #1A3C5A !important; /* Botón azul oscuro */
+            background-color: #1A3C5A !important;
             border: none !important;
             padding: 12px 30px !important;
             font-size: 1.2rem !important;
             border-radius: 25px !important;
             transition: background-color 0.3s ease !important;
-            color: #FFFFFF !important; /* Texto blanco */
+            color: #FFFFFF !important;
             text-decoration: none !important;
             display: inline-block;
-            margin: 5px; /* Espacio entre botones */
+            margin: 5px;
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
         }
         .custom-button:hover {
-            background-color: #FF5733 !important; /* Naranja al hover */
+            background-color: #FF5733 !important;
         }
         .custom-button--sm {
-            padding: 8px 20px !important; /* Tamaño más pequeño para botones en línea */
+            padding: 8px 20px !important;
             font-size: 1rem !important;
+        }
+        /* Estilos extra para igualar <a> y <button> */
+        .custom-button--sm,
+        .custom-button--sm:visited {
+            background-color: #1A3C5A !important;
+            color: #FFFFFF !important;
+        }
+        .custom-button--sm:hover {
+            background-color: #FF5733 !important;
+            color: #FFFFFF !important;
         }
     </style>
 {% endblock %}

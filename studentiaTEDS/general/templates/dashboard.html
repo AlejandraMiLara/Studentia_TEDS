@@ -5,6 +5,7 @@
 
 {% block styles %}
     <link href="//fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
     <style>
         .custom-section {
@@ -36,21 +37,20 @@
             list-style: none;
             padding: 0;
             margin: 0 auto;
-            max-width: 600px; /* Ancho similar al de "Mi Perfil" */
+            max-width: 800px; /* Aumentar para más espacio */
+        }
+        .course-list--created {
+            margin-bottom: 20px; /* Reducir para evitar colapso, ya que usaremos section-spacer */
         }
         .course-list li {
             color: #4A4A4A !important; /* Gris oscuro para texto secundario */
             font-size: 1.1rem !important;
-            margin-bottom: 10px;
+            margin-bottom: 20px; /* Más espaciado entre ítems */
             font-family: 'Poppins', sans-serif;
-        }
-        .course-list li a {
-            color: #1A3C5A !important; /* Azul oscuro para enlaces */
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .course-list li a:hover {
-            color: #FF5733 !important; /* Naranja al hover */
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
         }
         .course-list li strong {
             color: #1A3C5A !important; /* Azul oscuro para códigos */
@@ -61,6 +61,9 @@
             font-size: 1.1rem !important;
             font-family: 'Poppins', sans-serif;
             margin-bottom: 20px;
+        }
+        .empty-message--spacer {
+            margin-bottom: 100px; /* Aumentar el espacio para que sea más grande */
         }
         .custom-button {
             background-color: #1A3C5A !important; /* Botón azul oscuro */
@@ -80,8 +83,11 @@
             background-color: #FF5733 !important; /* Naranja al hover */
         }
         .custom-button--sm {
-            padding: 8px 20px !important; /* Tamaño más pequeño para botones en línea */
-            font-size: 1rem !important;
+            padding: 8px 20px !important; /* Aumentar ligeramente el tamaño */
+            font-size: 1rem !important; /* Aumentar ligeramente el tamaño del texto */
+            margin: 5px;
+            width: auto; /* Asegurar que el tamaño se ajuste al ícono */
+            text-align: center;
         }
         .custom-button--danger {
             background-color: #FF5733 !important; /* Botón rojo para acciones peligrosas */
@@ -94,6 +100,57 @@
         }
         .custom-button--warning:hover {
             background-color: #1A3C5A !important; /* Azul al hover */
+        }
+        .button-group {
+            display: flex;
+            gap: 15px; /* Aumentar espaciado entre elementos */
+            flex-wrap: wrap;
+            align-items: center;
+            width: 100%;
+        }
+        .course-info {
+            display: flex;
+            gap: 15px; /* Más espacio entre el botón y el texto */
+            align-items: center;
+            flex-grow: 1; /* Ocupa el espacio disponible */
+            flex-wrap: wrap;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 15px; /* Más espacio entre botones de acción */
+            flex-wrap: nowrap; /* Asegurar que los botones de acción no se envuelvan */
+        }
+        .section-spacer {
+            margin-top: 100px; /* Aumentar significativamente el espacio entre secciones */
+        }
+        @media (max-width: 768px) {
+            .course-list li {
+                flex-direction: column;
+                align-items: center; /* Centrar en móviles */
+            }
+            .button-group {
+                width: 100%;
+                justify-content: center;
+                gap: 10px; /* Reducir ligeramente en móviles */
+            }
+            .course-info, .action-buttons {
+                width: 100%;
+                justify-content: center;
+                gap: 10px;
+            }
+            .custom-button, .custom-button--sm {
+                width: 100%; /* Botones apilados en móviles */
+                margin: 10px 0; /* Más espacio vertical entre botones */
+            }
+            .section-spacer {
+                margin-top: 40px; /* Reducir el espacio en móviles */
+            }
+            .empty-message--spacer {
+                margin-bottom: 40px; /* Reducir el espacio en móviles */
+            }
+            .course-list--created {
+                margin-bottom: 10px; /* Reducir el espacio en móviles */
+            }
         }
     </style>
 {% endblock %}
@@ -110,28 +167,42 @@
                     <a href="{% url 'crear_curso' %}" class="custom-button mt-3">Crear Nuevo Curso</a>
                     
                     {% if cursos_creados %}
-                        <ul class="course-list">
+                        <ul class="course-list course-list--created">
                             {% for curso in cursos_creados %}
                                 <li>
-                                    <a href="{% url 'board' curso.codigo_acceso %}">{{ curso.nombre_curso }}</a>
-                                    - Código: <strong>{{ curso.codigo_acceso }}</strong>
-                                    <a href="{% url 'board_actualizar' curso.codigo_acceso %}" class="custom-button custom-button--sm custom-button--warning">Editar Configuración</a>
-                                    <a href="{% url 'board_borrar' curso.codigo_acceso %}" class="custom-button custom-button--sm custom-button--danger">Eliminar</a>
+                                    <div class="button-group">
+                                        <div class="course-info">
+                                            <a href="{% url 'board' curso.codigo_acceso %}" class="custom-button custom-button--sm">{{ curso.nombre_curso }}</a>
+                                            <span>Código: <strong>{{ curso.codigo_acceso }}</strong></span>
+                                        </div>
+                                        <div class="action-buttons">
+                                            <a href="{% url 'board_actualizar' curso.codigo_acceso %}" class="custom-button custom-button--sm custom-button--warning"><i class="fas fa-edit"></i></a>
+                                            <a href="{% url 'board_borrar' curso.codigo_acceso %}" class="custom-button custom-button--sm custom-button--danger"><i class="fas fa-trash"></i></a>
+                                        </div>
+                                    </div>
                                 </li>
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="empty-message">Nada por el momento.</p>
+                        <p class="empty-message empty-message--spacer">Nada por el momento.</p>
                     {% endif %}
+
+                    <div class="section-spacer"></div> <!-- Espacio grande entre secciones -->
 
                     <h3 class="custom-subtitle">Mis Cursos Inscritos</h3>
                     {% if cursos_inscritos %}
                         <ul class="course-list">
                             {% for inscripcion in cursos_inscritos %}
                                 <li>
-                                    <a href="{% url 'board' inscripcion.curso.codigo_acceso %}">{{ inscripcion.curso.nombre_curso }}</a>
-                                    - Profesor: {{ inscripcion.curso.id_profesor.username }}
-                                    <a href="{% url 'board_leave' inscripcion.curso.codigo_acceso %}" class="custom-button custom-button--sm custom-button--danger">Salir del Curso</a>
+                                    <div class="button-group">
+                                        <div class="course-info">
+                                            <a href="{% url 'board' inscripcion.curso.codigo_acceso %}" class="custom-button custom-button--sm">{{ inscripcion.curso.nombre_curso }}</a>
+                                            <span>Profesor: {{ inscripcion.curso.id_profesor.username }}</span>
+                                        </div>
+                                        <div class="action-buttons">
+                                            <a href="{% url 'board_leave' inscripcion.curso.codigo_acceso %}" class="custom-button custom-button--sm custom-button--danger"><i class="fas fa-sign-out-alt"></i></a>
+                                        </div>
+                                    </div>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -145,9 +216,15 @@
                         <ul class="course-list">
                             {% for inscripcion in cursos_inscritos %}
                                 <li>
-                                    <a href="{% url 'board' inscripcion.curso.codigo_acceso %}">{{ inscripcion.curso.nombre_curso }}</a>
-                                    - Profesor: {{ inscripcion.curso.id_profesor.username }}
-                                    <a href="{% url 'board_leave' inscripcion.curso.codigo_acceso %}" class="custom-button custom-button--sm custom-button--danger">Salir del Curso</a>
+                                    <div class="button-group">
+                                        <div class="course-info">
+                                            <a href="{% url 'board' inscripcion.curso.codigo_acceso %}" class="custom-button custom-button--sm">{{ inscripcion.curso.nombre_curso }}</a>
+                                            <span>Profesor: {{ inscripcion.curso.id_profesor.username }}</span>
+                                        </div>
+                                        <div class="action-buttons">
+                                            <a href="{% url 'board_leave' inscripcion.curso.codigo_acceso %}" class="custom-button custom-button--sm custom-button--danger"><i class="fas fa-sign-out-alt"></i></a>
+                                        </div>
+                                    </div>
                                 </li>
                             {% endfor %}
                         </ul>

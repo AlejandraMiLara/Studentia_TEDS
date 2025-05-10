@@ -50,6 +50,16 @@
     .custom-button:hover {
         background-color: #FF5733 !important;
     }
+
+    /* Esquinas redondeadas en textarea */
+    textarea {
+        border-radius: 12px !important;
+        padding: 10px;
+        width: 100%;
+        resize: vertical;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1rem;
+    }
 </style>
 {% endblock %}
 
@@ -67,7 +77,29 @@
 
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
-            {{ form.as_p }}
+
+            <!-- Campo Motivo con etiqueta arriba -->
+            <div style="text-align: left; margin-bottom: 20px;">
+                <label for="{{ form.motivo.id_for_label }}" style="font-weight: 600; color: #1A3C5A;">{{ form.motivo.label }}</label><br>
+                {{ form.motivo }}
+                {% if form.motivo.errors %}
+                    <div class="text-danger">{{ form.motivo.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Resto de campos (excepto motivo) -->
+            {% for field in form %}
+                {% if field.name != 'motivo' %}
+                    <div style="margin-bottom: 15px; text-align: left;">
+                        {{ field.label_tag }}
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="text-danger">{{ field.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+
             <button type="submit" class="custom-button">Reportar</button>
         </form>
       </div>
