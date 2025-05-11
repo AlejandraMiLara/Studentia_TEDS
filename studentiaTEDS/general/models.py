@@ -50,24 +50,6 @@ class AlumnoCurso(models.Model):
     def __str__(self):
         return f"{self.alumno.username} en {self.curso.nombre_curso}"
     
-class Actividad(models.Model):
-    docente = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='actividades_creadas'
-    )
-    curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
-    fecha = models.DateTimeField(auto_now_add=True)
-    archivo = models.FileField(upload_to='actividades/', null=True, blank=True)
-    entregable = models.BooleanField(default=True)
-    generado_por_ia = models.BooleanField(default=False)
-    titulo = models.CharField(max_length=255)
-    contenido = models.TextField()
-    permite_entrega_tardia = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.titulo} - {self.curso.nombre_curso}"
-    
 class Reporte(models.Model):
     reportante = models.ForeignKey(
         settings.AUTH_USER_MODEL,
