@@ -1,63 +1,64 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block styles %}
-    <link href="//fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,700;1,400;1,600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <style>
-        .custom-section {
-            background: #FFFFFF; /* Fondo blanco como en la imagen */
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-        .custom-title {
-            color: #1A3C5A !important; /* Azul oscuro de la imagen */
-            font-size: 2.8rem !important;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-        }
-        .custom-form .form-group input,
-        .custom-form .form-group select,
-        .custom-form .form-group textarea {
-            border: 2px solid #1A3C5A !important; /* Borde azul oscuro de la imagen */
-            border-radius: 8px !important;
-            padding: 12px !important;
-            width: 100% !important;
-            transition: border-color 0.3s ease !important;
-        }
-        .custom-form .form-group input:focus,
-        .custom-form .form-group select:focus,
-        .custom-form .form-group textarea:focus {
-            border-color: #FF5733 !important; /* Naranja al hacer foco, como el hover de la imagen */
-            outline: none !important;
-        }
-        .custom-form .form-group label {
-            color: #4A4A4A !important; /* Gris oscuro para etiquetas, como el texto secundario de la imagen */
-            font-weight: 600 !important;
-            font-size: 1.1rem !important;
-        }
-        .custom-form .form-group .help-text {
-            color: #4A4A4A !important;
-            font-size: 0.9rem !important;
-            margin-top: 5px;
-        }
-        .custom-button {
-            background-color: #1A3C5A !important; /* Botón azul oscuro de la imagen */
-            border: none !important;
-            padding: 12px 30px !important;
-            font-size: 1.2rem !important;
-            border-radius: 25px !important;
-            transition: background-color 0.3s ease !important;
-            color: #FFFFFF !important;
-            text-decoration: none !important;
-            display: inline-block;
-            margin-right: 10px;
-        }
-        .custom-button:hover {
-            background-color: #FF5733 !important; /* Naranja al pasar el mouse, como en la imagen */
-        }
-    </style>
+<link href="//fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+<style>
+    .custom-section {
+        background: #FFFFFF;
+        border-radius: 15px;
+        padding: 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .custom-title {
+        color: #1A3C5A;
+        font-size: 2.8rem;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }
+    .custom-form .form-group input,
+    .custom-form .form-group select,
+    .custom-form .form-group textarea {
+        border: 2px solid #1A3C5A;
+        border-radius: 8px;
+        padding: 12px;
+        width: 100%;
+        transition: border-color 0.3s ease;
+    }
+    .custom-form .form-group input:focus,
+    .custom-form .form-group select:focus,
+    .custom-form .form-group textarea:focus {
+        border-color: #FF5733;
+        outline: none;
+    }
+    .custom-form .form-group label {
+        color: #4A4A4A;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    .text-danger {
+        color: #dc3545;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+    .custom-button {
+        background-color: #1A3C5A;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.2rem;
+        border-radius: 25px;
+        transition: background-color 0.3s ease;
+        color: #FFFFFF;
+        text-decoration: none;
+        display: inline-block;
+        margin-right: 10px;
+    }
+    .custom-button:hover {
+        background-color: #FF5733;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -67,37 +68,26 @@
       <div class="custom-section">
         <h2 class="custom-title">Editar Perfil</h2>
 
-        <form method="post" enctype="multipart/form-data" class="custom-form">
+<form method="post" enctype="multipart/form-data" class="custom-form" onsubmit="return this.checkValidity();">
             {% csrf_token %}
-            <div class="form-group mb-4">
-                <label for="id_username">Nombre de usuario</label>
-                <input type="text" name="username" id="id_username" maxlength="150" required pattern="[A-Za-z0-9@/./+/-/_]+" class="form-control">
-                <div class="help-text">Obligatorio. Longitud máxima 150 caracteres alfanuméricos. Letras, dígitos y @/./+/-/_ únicamente.</div>
-            </div>
 
-            <div class="form-group mb-4">
-                <label for="id_email">Dirección de correo electrónico</label>
-                <input type="email" name="email" id="id_email" class="form-control">
-            </div>
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
 
-            <div class="form-group mb-4">
-                <label for="id_rol">Rol</label>
-                <select name="rol" id="id_rol" class="form-control">
-                    <option value="Estudiante" selected>Estudiante</option>
-                    <option value="Profesor">Profesor</option>
-                </select>
-            </div>
-
-            <div class="form-group mb-4">
-                <label for="id_sobre_mi">Sobre mí</label>
-                <textarea name="sobre_mi" id="id_sobre_mi" class="form-control" rows="4"></textarea>
-            </div>
-
-            <div class="form-group mb-4">
-                <label for="id_foto_perfil">Foto de perfil</label>
-                <input type="file" name="foto_perfil" id="id_foto_perfil" class="form-control">
-                <div class="help-text">No se eligió ningún archivo.</div>
-            </div>
+            {% for field in form %}
+                <div class="form-group mb-4">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
 
             <div class="text-center mt-4">
                 <button type="submit" class="custom-button">Guardar Cambios</button>
@@ -108,4 +98,43 @@
     </div>
   </div>
 </section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form.custom-form");
+    const emailInput = form.querySelector("input[name='email']");
+
+    if (!emailInput) return; // Si no hay campo email, salimos
+
+    // Buscar el contenedor del campo (donde están el label y el input)
+    const formGroup = emailInput.closest('.form-group');
+
+    // Crear el div de error
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "text-danger";
+    errorDiv.style.display = "none";
+    errorDiv.textContent = "Por favor, complete este campo";
+    formGroup.appendChild(errorDiv);
+
+    // Mostrar error al enviar
+    form.addEventListener("submit", function (e) {
+        if (emailInput.value.trim() === "") {
+            e.preventDefault(); // Detener el envío
+            errorDiv.style.display = "block";
+            emailInput.focus();
+        }
+    });
+
+    // Ocultar error al escribir
+    emailInput.addEventListener("input", function () {
+        if (emailInput.value.trim() !== "") {
+            errorDiv.style.display = "none";
+        }
+    });
+});
+</script>
+
+
+
+
 {% endblock %}

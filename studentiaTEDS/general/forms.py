@@ -18,8 +18,30 @@ class EditarPerfilForm(forms.ModelForm):
         fields = ('username', 'email', 'rol', 'sobre_mi', 'foto_perfil')
 
         widgets = {
-            'sobre_mi': forms.Textarea(attrs={'rows':4}),
+            'username': forms.TextInput(attrs={
+                'readonly': 'readonly',
+                'class': 'form-control'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control'
+            }),
+            'sobre_mi': forms.Textarea(attrs={
+                'rows': 4,
+                'class': 'form-control'
+            }),
+            'rol': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'foto_perfil': forms.ClearableFileInput(attrs={
+                'class': 'form-control'
+            }),
         }
+
+        help_texts = {
+            'username': '',  # Elimina el texto de ayuda por defecto
+            'email': '',
+        }
+
 
 class CursoForm(forms.ModelForm):
     class Meta:
