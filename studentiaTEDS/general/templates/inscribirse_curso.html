@@ -104,12 +104,13 @@
                 <h2 class="custom-title">Inscribirse en un Curso</h2>
 
                 {% if messages %}
-                    <div>
+                    <div class="alert alert-info">
                         {% for message in messages %}
-                            <p class="message {{ message.tags }}">{{ message }}</p>
+                            <p>{{ message }}</p>
                         {% endfor %}
                     </div>
                 {% endif %}
+
 
                 <form method="POST" class="custom-form">
                     {% csrf_token %}

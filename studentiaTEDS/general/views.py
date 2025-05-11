@@ -184,22 +184,30 @@ def inscribirse_curso(request):
         if form.is_valid():
             codigo_acceso = form.cleaned_data["codigo_acceso"]
 
+            # Buscar el curso por su código de acceso
             curso = Curso.objects.filter(codigo_acceso=codigo_acceso).first()
 
+            # Validar que el curso existe
             if not curso:
                 messages.error(request, "El curso no existe.")
                 return redirect("inscribirse_curso")
 
+            # Validar que el profesor no intente inscribirse en su propio curso
             if curso.id_profesor == request.user:
                 messages.error(request, "No puedes inscribirte en tu propio curso.")
                 return redirect("inscribirse_curso")
 
+            # Verificar si el usuario ya está inscrito en el curso
             if AlumnoCurso.objects.filter(curso=curso, alumno=request.user).exists():
+                # Si ya está inscrito, mostrar el mensaje de error
                 messages.error(request, "Ya estás inscrito en este curso.")
-            else:
-                AlumnoCurso.objects.create(curso=curso, alumno=request.user)
-                #messages.success(request, f"Te has inscrito en {curso.nombre_curso} correctamente.")
+                return redirect("inscribirse_curso")  # Redirigir para que el mensaje se vea
 
+            # Si no está inscrito, registrar la inscripción
+            AlumnoCurso.objects.create(curso=curso, alumno=request.user)
+            messages.success(request, f"Te has inscrito en {curso.nombre_curso} correctamente.")
+
+            # Redirigir al dashboard
             return redirect("dashboard")
 
     else:
