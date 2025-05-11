@@ -343,7 +343,8 @@ def content_edit(request, codigo_acceso, id_actividad):
 
     return render(request, 'board_edit_content.html', {
         'curso': curso,
-        'form': form
+        'form': form,
+        'actividad': actividad,
     })
 
 @login_required
@@ -361,4 +362,14 @@ def content_delete(request, codigo_acceso, id_actividad):
     return render(request, 'board_delete_content.html', {
         'curso': curso,
         'actividad': actividad
+    })
+
+@login_required
+def content_detail(request, codigo_acceso, id_actividad):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso)
+
+    return render(request, 'board_content_detail.html', {
+        'curso': curso,
+        'actividad': actividad,
     })

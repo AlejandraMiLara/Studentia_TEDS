@@ -169,6 +169,9 @@
                                 <small class="text-muted">
                                     Publicado {{ act.fecha|naturaltime }} {{ act.fecha|date:'d M Y, H:i' }}.
                                 </small>
+
+                    <a href="{% url 'content_detail' curso.codigo_acceso act.id %}" class="btn btn-sm btn-primary">Ver</a>
+
                     {% if request.user == curso.id_profesor %}
                         <a href="{% url 'content_edit' curso.codigo_acceso act.id %}" class="btn btn-sm btn-warning">Editar</a>
                         <a href="{% url 'content_delete' curso.codigo_acceso act.id %}" class="btn btn-sm btn-danger">Eliminar</a>

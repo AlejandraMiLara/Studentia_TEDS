@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Actividad - {{ actividad.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Editar Actividad: {{ actividad.titulo }}</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="form-group">
+        {{ form.titulo.label_tag }}<br>
+        {{ form.titulo }}
+        {% if form.titulo.errors %}
+            <div class="text-danger">{{ form.titulo.errors }}</div>
+        {% endif %}
+    </div>
+
+    {# Resto de campos #}
+    {% for field in form %}
+        {% if field.name != 'titulo' %}
+            <div class="form-group">
+                {{ field.label_tag }}<br>
+                {{ field }}
+                {% if field.errors %}
+                    <div class="text-danger">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    <button type="submit" class="btn btn-success">Actualizar</button>
+    <a href="{% url 'board' curso.codigo_acceso %}" class="btn btn-secondary">Volver</a>
+</form>
+
+</div>
+{% endblock %}

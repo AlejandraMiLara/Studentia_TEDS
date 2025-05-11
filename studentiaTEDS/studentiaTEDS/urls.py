@@ -36,6 +36,8 @@ urlpatterns = [
     path("board/<str:codigo_acceso>/add/content", views.board_add_content, name="board_add_content"),
     path("board/<str:codigo_acceso>/actividad/<int:id_actividad>/edit", views.content_edit, name="content_edit"),
     path("board/<str:codigo_acceso>/actividad/<int:id_actividad>/delete", views.content_delete, name="content_delete"),
+    path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/view', views.content_detail, name='content_detail'),
+
 
 ]
 
