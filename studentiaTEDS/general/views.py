@@ -229,17 +229,41 @@ def board_remove_student(request, codigo_acceso, id_alumno):
 
     return redirect('board_view_students', codigo_acceso=codigo_acceso)
 
+from django.http import HttpResponseForbidden
+from django.db.models import Q
+
 @login_required
 def other_profile(request, id):
     usuario = request.user
     alumno = get_object_or_404(UsuarioPersonalizado, id=id)
 
     if usuario.id == alumno.id:
-       return redirect('ver_perfil')
+        return redirect('ver_perfil')
 
-    return render(request, 'other_profile.html', {
-        'alumno':alumno
-    })
+    # Verificar relación académica:
+    # Caso 1: Ambos son alumnos del mismo curso
+    cursos_comunes = AlumnoCurso.objects.filter(
+        curso__in=AlumnoCurso.objects.filter(alumno=usuario).values('curso'),
+        alumno=alumno
+    ).exists()
+
+    # Caso 2: Usuario logueado es profesor de un curso donde el otro es alumno
+    como_profesor = Curso.objects.filter(
+        id_profesor=usuario,
+        alumnocurso__alumno=alumno
+    ).exists()
+
+    # Caso 3: Usuario logueado es alumno en curso impartido por el otro (profesor)
+    como_estudiante = Curso.objects.filter(
+        id_profesor=alumno,
+        alumnocurso__alumno=usuario
+    ).exists()
+
+    if not (cursos_comunes or como_profesor or como_estudiante):
+        return HttpResponseForbidden("No tienes permiso para ver este perfil.")
+
+    return render(request, 'other_profile.html', {'alumno': alumno})
+
 
 @login_required
 def report(request, id):
