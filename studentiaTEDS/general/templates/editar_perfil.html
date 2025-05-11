@@ -99,40 +99,78 @@
   </div>
 </section>
 
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.querySelector("form.custom-form");
     const emailInput = form.querySelector("input[name='email']");
 
-    if (!emailInput) return; // Si no hay campo email, salimos
+    if (emailInput) {
+        const formGroup = emailInput.closest('.form-group');
 
-    // Buscar el contenedor del campo (donde están el label y el input)
-    const formGroup = emailInput.closest('.form-group');
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "text-danger";
+        errorDiv.style.display = "none";
+        errorDiv.textContent = "Por favor, complete este campo";
+        formGroup.appendChild(errorDiv);
 
-    // Crear el div de error
-    const errorDiv = document.createElement("div");
-    errorDiv.className = "text-danger";
-    errorDiv.style.display = "none";
-    errorDiv.textContent = "Por favor, complete este campo";
-    formGroup.appendChild(errorDiv);
+        form.addEventListener("submit", function (e) {
+            if (emailInput.value.trim() === "") {
+                e.preventDefault();
+                errorDiv.style.display = "block";
+                emailInput.focus();
+            }
+        });
 
-    // Mostrar error al enviar
-    form.addEventListener("submit", function (e) {
-        if (emailInput.value.trim() === "") {
-            e.preventDefault(); // Detener el envío
-            errorDiv.style.display = "block";
-            emailInput.focus();
-        }
-    });
+        emailInput.addEventListener("input", function () {
+            if (emailInput.value.trim() !== "") {
+                errorDiv.style.display = "none";
+            }
+        });
+    }
 
-    // Ocultar error al escribir
-    emailInput.addEventListener("input", function () {
-        if (emailInput.value.trim() !== "") {
-            errorDiv.style.display = "none";
-        }
-    });
+    // Validación, contador y bloqueo en "sobre_mi"
+    const sobreMiInput = form.querySelector("textarea[name='sobre_mi']");
+    if (sobreMiInput) {
+        const maxLength = 150;
+
+        const counter = document.createElement("div");
+        counter.style.fontSize = "0.9rem";
+        counter.style.textAlign = "right";
+        counter.style.color = "#6c757d";
+        counter.textContent = `0 / ${maxLength}`;
+        sobreMiInput.parentElement.appendChild(counter);
+
+        const sobreMiError = document.createElement("div");
+        sobreMiError.className = "text-danger";
+        sobreMiError.style.display = "none";
+        sobreMiError.textContent = `Máximo ${maxLength} caracteres permitidos.`;
+        sobreMiInput.parentElement.appendChild(sobreMiError);
+
+        sobreMiInput.addEventListener("input", function () {
+            let currentText = sobreMiInput.value;
+            if (currentText.length > maxLength) {
+                sobreMiInput.value = currentText.slice(0, maxLength);
+                sobreMiError.style.display = "block";
+            } else {
+                sobreMiError.style.display = "none";
+            }
+            counter.textContent = `${sobreMiInput.value.length} / ${maxLength}`;
+            counter.style.color = sobreMiInput.value.length >= maxLength ? "#dc3545" : "#6c757d";
+        });
+
+        form.addEventListener("submit", function (e) {
+            if (sobreMiInput.value.length > maxLength) {
+                e.preventDefault();
+                sobreMiError.style.display = "block";
+                sobreMiInput.focus();
+            }
+        });
+    }
 });
 </script>
+
+
 
 
 
