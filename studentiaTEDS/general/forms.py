@@ -38,7 +38,7 @@ class EditarPerfilForm(forms.ModelForm):
         }
 
         help_texts = {
-            'username': '',  # Elimina el texto de ayuda por defecto
+            'username': '',
             'foto_perfil': '',
             'email': '',
         }
@@ -55,10 +55,38 @@ class CursoForm(forms.ModelForm):
 class InscripcionCursoForm(forms.Form):
     codigo_acceso = forms.CharField(label="Código de Curso", max_length=10, required=True)
 
+    class Meta:
+        fields = ['codigo_acceso']
+        widgets = {
+            'codigo_acceso': forms.TextInput(attrs={
+                'class': 'form-control'
+            })
+        }
+
+
 class ReportarForm(forms.ModelForm):
     class Meta:
         model = Reporte
-        fields = ['motivo']        
+        fields = ['motivo']
+        widgets = {
+            'motivo': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Describe el motivo del reporte',
+                'rows': 4,
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['motivo'].required = False
+
+    def clean_motivo(self):
+        motivo = self.cleaned_data.get('motivo', '').strip()
+        if not motivo:
+            raise forms.ValidationError("Por favor, ingrese el motivo del reporte.")
+        return motivo
+
+   
 
 class ActividadForm(forms.ModelForm):
     class Meta:

@@ -50,8 +50,6 @@
     .custom-button:hover {
         background-color: #FF5733 !important;
     }
-
-    /* Esquinas redondeadas en textarea */
     textarea {
         border-radius: 12px !important;
         padding: 10px;
@@ -78,27 +76,16 @@
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
-            <!-- Campo Motivo con etiqueta arriba -->
+            <!-- Campo Motivo -->
             <div style="text-align: left; margin-bottom: 20px;">
-                <label for="{{ form.motivo.id_for_label }}" style="font-weight: 600; color: #1A3C5A;">{{ form.motivo.label }}</label><br>
+                <label for="{{ form.motivo.id_for_label }}" style="font-weight: 600; color: #1A3C5A;">
+                    {{ form.motivo.label }}
+                </label>
                 {{ form.motivo }}
                 {% if form.motivo.errors %}
-                    <div class="text-danger">{{ form.motivo.errors }}</div>
+                    <div class="text-danger" id="error-motivo">{{ form.motivo.errors.0 }}</div>
                 {% endif %}
             </div>
-
-            <!-- Resto de campos (excepto motivo) -->
-            {% for field in form %}
-                {% if field.name != 'motivo' %}
-                    <div style="margin-bottom: 15px; text-align: left;">
-                        {{ field.label_tag }}
-                        {{ field }}
-                        {% if field.errors %}
-                            <div class="text-danger">{{ field.errors }}</div>
-                        {% endif %}
-                    </div>
-                {% endif %}
-            {% endfor %}
 
             <button type="submit" class="custom-button">Reportar</button>
         </form>
@@ -110,4 +97,14 @@
 
 {% block scripts %}
 {{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const motivoInput = document.getElementById("id_motivo");
+    const errorDiv = document.getElementById("error-motivo");
+
+    motivoInput?.addEventListener("input", () => {
+        if (errorDiv) errorDiv.innerText = "";
+    });
+});
+</script>
 {% endblock %}

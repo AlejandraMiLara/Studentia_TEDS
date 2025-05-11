@@ -112,8 +112,9 @@
                 {% endif %}
 
 
-                <form method="POST" class="custom-form">
-                    {% csrf_token %}
+<form method="POST" class="custom-form">
+    {% csrf_token %}
+
                     {% for field in form %}
                         <div class="form-group mb-4">
                             <label for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -123,11 +124,12 @@
                             {% endif %}
                         </div>
                     {% endfor %}
-                    <div class="text-center mt-4">
-                        <button type="submit" class="custom-button">Inscribirse</button>
-                        <a href="{% url 'dashboard' %}" class="custom-button">Volver al Dashboard</a>
-                    </div>
-                </form>
+    <button type="submit" class="btn btn-primary">Inscribirse</button>
+</form>
+
+
+    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Volver al Dashboard</a>
+
             </div>
         </div>
     </div>

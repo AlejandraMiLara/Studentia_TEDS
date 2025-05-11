@@ -283,7 +283,6 @@ def report(request, id):
 
         if form.is_valid():
             reporte = form.save(commit=False)
-
             reporte.reportante = usuario
             reporte.reportado = alumno
             reporte.save()
@@ -292,10 +291,11 @@ def report(request, id):
         form = ReportarForm()
 
     return render(request, 'report.html', {
-        'form':form,
-        'reportado':alumno,
+        'form': form,
+        'reportado': alumno,
         'reportante': usuario
     })
+
 
 @login_required
 def report_success(request):
