@@ -39,6 +39,7 @@ class EditarPerfilForm(forms.ModelForm):
 
         help_texts = {
             'username': '',  # Elimina el texto de ayuda por defecto
+            'foto_perfil': '',
             'email': '',
         }
 
