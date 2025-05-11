@@ -169,12 +169,10 @@
                                 <small class="text-muted">
                                     Publicado {{ act.fecha|naturaltime }} {{ act.fecha|date:'d M Y, H:i' }}.
                                 </small>
-                                {% if request.user == curso.id_profesor %}
-                                    <div class="mt-2">
-                                        <a href="{% url 'board_edit_content' curso.codigo_acceso act.id %}" class="custom-button custom-button--sm">Editar</a>
-                                        <a href="{% url 'board_delete_content' curso.codigo_acceso act.id %}" class="custom-button custom-button--sm">Eliminar</a>
-                                    </div>
-                                {% endif %}
+                    {% if request.user == curso.id_profesor %}
+                        <a href="{% url 'content_edit' curso.codigo_acceso act.id %}" class="btn btn-sm btn-warning">Editar</a>
+                        <a href="{% url 'content_delete' curso.codigo_acceso act.id %}" class="btn btn-sm btn-danger">Eliminar</a>
+                    {% endif %}
                             </li>
                         {% endfor %}
                     </ul>

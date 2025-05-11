@@ -292,3 +292,41 @@ def board_add_content(request, codigo_acceso):
         'curso': curso,
         'form': form
     })
+
+@login_required
+def content_edit(request, codigo_acceso, id_actividad):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso)
+
+    if request.user != curso.id_profesor:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = ActividadForm(request.POST, request.FILES, instance=actividad)
+        if form.is_valid():
+            form.save()
+            return redirect('board', codigo_acceso=codigo_acceso)
+    else:
+        form = ActividadForm(instance=actividad)
+
+    return render(request, 'board_edit_content.html', {
+        'curso': curso,
+        'form': form
+    })
+
+@login_required
+def content_delete(request, codigo_acceso, id_actividad):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso)
+
+    if request.user != curso.id_profesor:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        actividad.delete()
+        return redirect('board', codigo_acceso=codigo_acceso)
+
+    return render(request, 'board_delete_content.html', {
+        'curso': curso,
+        'actividad': actividad
+    })
