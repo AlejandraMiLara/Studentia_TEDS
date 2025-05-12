@@ -32,9 +32,7 @@ class EditarPerfilForm(forms.ModelForm):
             'rol': forms.Select(attrs={
                 'class': 'form-control'
             }),
-            'foto_perfil': forms.ClearableFileInput(attrs={
-                'class': 'form-control'
-            }),
+
         }
 
         help_texts = {
