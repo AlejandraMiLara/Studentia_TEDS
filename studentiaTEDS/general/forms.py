@@ -90,26 +90,3 @@ class ActividadForm(forms.ModelForm):
     class Meta:
         model = Actividad
         fields = ['titulo', 'contenido', 'archivo', 'entregable', 'generado_por_ia', 'permite_entrega_tardia']
-        widgets = {
-            'titulo': forms.TextInput(attrs={
-                'class': 'form-control'
-            }),
-            'contenido': forms.Textarea(attrs={
-                'rows': 4,
-                'class': 'form-control'
-            }),
-            'archivo': forms.FileInput(attrs={  # Cambiamos a FileInput
-                'class': 'form-control',
-                'id': 'id_archivo'
-            }),
-            'entregable': forms.CheckboxInput(),
-            'generado_por_ia': forms.CheckboxInput(),
-            'permite_entrega_tardia': forms.CheckboxInput(),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Desactivamos el renderizado automático del enlace "Actualmente:" y el checkbox "Borrar"
-        self.fields['archivo'].widget.clear_checkbox_name = None  # Elimina el checkbox "Borrar"
-        self.fields['archivo'].widget.initial_text = ""  # Elimina el texto "Actualmente:"
-        self.fields['archivo'].widget.input_text = ""  # Elimina el texto del input

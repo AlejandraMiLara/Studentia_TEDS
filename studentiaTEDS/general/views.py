@@ -325,6 +325,7 @@ def board_add_content(request, codigo_acceso):
         'form': form
     })
 
+
 @login_required
 def content_edit(request, codigo_acceso, id_actividad):
     curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
@@ -343,9 +344,9 @@ def content_edit(request, codigo_acceso, id_actividad):
 
     return render(request, 'board_edit_content.html', {
         'curso': curso,
-        'form': form,
-        'actividad': actividad,
+        'form': form
     })
+
 
 @login_required
 def content_delete(request, codigo_acceso, id_actividad):
