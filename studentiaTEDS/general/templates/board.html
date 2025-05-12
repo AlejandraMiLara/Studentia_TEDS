@@ -6,6 +6,7 @@
 {% block styles %}
     <link href="//fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,700;1,400;1,600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .custom-section {
             background: #FFFFFF;
@@ -60,6 +61,9 @@
             font-family: 'Poppins', sans-serif;
             border-bottom: 1px solid #e0e0e0;
             padding-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .activity-list li strong {
             color: #1A3C5A !important;
@@ -89,7 +93,7 @@
             color: #FFFFFF !important;
         }
         .badge.bg-info {
-            background-color: #17a2b8 !important; /* Azul claro para "Permite entrega tardía" */
+            background-color: #17a2b8 !important;
             color: #FFFFFF !important;
         }
         .text-muted {
@@ -121,8 +125,35 @@
             background-color: #FF5733 !important;
         }
         .custom-button--sm {
-            padding: 8px 20px !important;
+            padding: 8px 15px !important;
             font-size: 1rem !important;
+            border-radius: 50%; /* Hacer botones circulares */
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .custom-button--view {
+            background-color: #a855f7 !important;
+            color: #FFFFFF !important;
+        }
+        .custom-button--edit {
+            background-color: #F5A623 !important;
+            color: #FFFFFF !important;
+        }
+        .custom-button--delete {
+            background-color: #dc3545 !important;
+            color: #FFFFFF !important;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        .custom-button i {
+            color: white;
+            font-size: 1rem;
         }
     </style>
 {% endblock %}
@@ -150,38 +181,48 @@
                     <ul class="activity-list">
                         {% for act in actividades %}
                             <li>
-                                <strong>{{ act.titulo }}</strong> 
-                                {% if act.archivo %}
-                                    - <a href="{{ act.archivo.url }}" target="_blank">Ver archivo</a>
-                                {% endif %}
-                                {% if act.entregable %}
-                                    <span class="badge bg-success">Entregable</span>
-                                {% else %}
-                                    <span class="badge bg-success">Contenido</span>
-                                {% endif %}
-                                {% if act.generado_por_ia %}
-                                    <span class="badge bg-warning text-dark">IA</span>
-                                {% endif %}
-                                {% if act.permite_entrega_tardia %}
-                                    <span class="badge bg-info">Permite entrega tardía</span>
-                                {% endif %}
-                                <br>
-                                <small class="text-muted">
-                                    Publicado {{ act.fecha|naturaltime }} {{ act.fecha|date:'d M Y, H:i' }}.
-                                </small>
-
-                    <a href="{% url 'content_detail' curso.codigo_acceso act.id %}" class="btn btn-sm btn-primary">Ver</a>
-
-                    {% if request.user == curso.id_profesor %}
-                        <a href="{% url 'content_edit' curso.codigo_acceso act.id %}" class="btn btn-sm btn-warning">Editar</a>
-                        <a href="{% url 'content_delete' curso.codigo_acceso act.id %}" class="btn btn-sm btn-danger">Eliminar</a>
-                    {% endif %}
+                                <div>
+                                    <strong>{{ act.titulo }}</strong> 
+                                    {% if act.archivo %}
+                                        - <a href="{{ act.archivo.url }}" target="_blank">Ver archivo</a>
+                                    {% endif %}
+                                    {% if act.entregable %}
+                                        <span class="badge bg-success">Entregable</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Contenido</span>
+                                    {% endif %}
+                                    {% if act.generado_por_ia %}
+                                        <span class="badge bg-warning text-dark">IA</span>
+                                    {% endif %}
+                                    {% if act.permite_entrega_tardia %}
+                                        <span class="badge bg-info">Permite entrega tardía</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">
+                                        Publicado {{ act.fecha|naturaltime }} {{ act.fecha|date:'d M Y, H:i' }}.
+                                    </small>
+                                </div>
+                                <div class="button-group">
+                                    <a href="{% url 'content_detail' curso.codigo_acceso act.id %}" class="custom-button custom-button--sm custom-button--view" title="Ver">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if request.user == curso.id_profesor %}
+                                        <a href="{% url 'content_edit' curso.codigo_acceso act.id %}" class="custom-button custom-button--sm custom-button--edit" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'content_delete' curso.codigo_acceso act.id %}" class="custom-button custom-button--sm custom-button--delete" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
                             </li>
                         {% endfor %}
                     </ul>
                 {% else %}
                     <p class="empty-message">No hay actividades aún.</p>
                 {% endif %}
+                 <a href="{% url 'dashboard' %}" class="custom-button mt-3">Volver a Dashboard</a>
+
             </div>
         </div>
     </div>

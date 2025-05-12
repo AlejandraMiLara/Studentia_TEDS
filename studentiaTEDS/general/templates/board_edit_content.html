@@ -1,38 +1,266 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Editar Actividad - {{ actividad.titulo }}{% endblock %}
 
+{% block styles %}
+    <link href="//fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <style>
+        .custom-section {
+            background: #FFFFFF;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .custom-title {
+            color: #1A3C5A !important;
+            font-size: 2.8rem !important;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .custom-form .form-group {
+            margin-bottom: 20px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .custom-form .form-group label {
+            color: #4A4A4A !important;
+            font-weight: bold !important;
+            font-size: 1.1rem !important;
+            font-family: 'Poppins', sans-serif;
+            display: block;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+
+        .custom-form .form-group input,
+        .custom-form .form-group textarea,
+        .custom-form .form-group select {
+            border: 2px solid #1A3C5A !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
+            width: 100% !important;
+            max-width: 500px;
+            margin: 0 auto;
+            transition: border-color 0.3s ease !important;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1.1rem;
+            display: block;
+            box-sizing: border-box;
+        }
+
+        .custom-form .form-group textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        .custom-form .form-group .file-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-height: 100px;
+        }
+
+        .custom-form .form-group .file-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .custom-form .form-group input[type="file"] {
+            border: none !important;
+            padding: 0 !important;
+            max-width: 350px;
+            flex: 1;
+            height: 35px;
+            box-sizing: border-box;
+            display: none; /* Ocultar el input nativo */
+            visibility: hidden; /* Asegurar que no interfiera */
+        }
+
+        .custom-form .form-group .file-status {
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            color: #6c757d;
+            margin-top: 5px;
+            text-align: left;
+        }
+
+        .custom-form .form-group .file-btn {
+            background-color: #1A3C5A !important;
+            border: none !important;
+            padding: 6px !important;
+            font-size: 0.9rem !important;
+            border-radius: 6px !important;
+            transition: background-color 0.3s ease !important;
+            color: #FFFFFF !important;
+            text-decoration: none !important;
+            display: inline-block;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            width: 70px !important;
+            height: 35px !important;
+            line-height: 22px !important;
+            text-align: center;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .custom-form .form-group .file-btn:hover {
+            background-color: #FF5733 !important;
+        }
+
+        .custom-form .form-group .checkbox-group {
+            text-align: left;
+            width: 500px;
+            margin: 0 auto 20px;
+            background-color: #F5F8FF;
+            border: 2px solid #1A3C5A;
+            border-radius: 8px;
+            padding: 8px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-around;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .custom-form .form-group input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #1A3C5A;
+            border-radius: 4px;
+            background-color: #FFFFFF;
+            cursor: pointer;
+            position: relative;
+            margin-right: 4px;
+        }
+
+        .custom-form .form-group input[type="checkbox"]:checked {
+            background-color: #1A3C5A;
+            border-color: #1A3C5A;
+        }
+
+        .custom-form .form-group input[type="checkbox"]:checked::after {
+            content: '✔';
+            color: white;
+            font-size: 12px;
+            position: absolute;
+            left: 2px;
+            top: -1px;
+        }
+
+        .custom-button {
+            background-color: #1A3C5A !important;
+            border: none !important;
+            padding: 12px 30px !important;
+            font-size: 1.2rem !important;
+            border-radius: 25px !important;
+            transition: background-color 0.3s ease !important;
+            color: #FFFFFF !important;
+            text-decoration: none !important;
+            display: inline-block;
+            margin: 0 10px !important;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+
+        .custom-button:hover {
+            background-color: #FF5733 !important;
+        }
+    </style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h2>Editar Actividad: {{ actividad.titulo }}</h2>
+<section class="w3l-contact-section py-5" style="background-color: #F5F8FF;">
+    <div class="container py-md-5 py-4">
+        <div class="text-center">
+            <div class="custom-section">
+                <h2 class="custom-title">Editar Actividad: {{ actividad.titulo }}</h2>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <div class="form-group">
-        {{ form.titulo.label_tag }}<br>
-        {{ form.titulo }}
-        {% if form.titulo.errors %}
-            <div class="text-danger">{{ form.titulo.errors }}</div>
-        {% endif %}
-    </div>
-
-    {# Resto de campos #}
-    {% for field in form %}
-        {% if field.name != 'titulo' %}
-            <div class="form-group">
-                {{ field.label_tag }}<br>
-                {{ field }}
-                {% if field.errors %}
-                    <div class="text-danger">{{ field.errors }}</div>
-                {% endif %}
+                <form method="post" enctype="multipart/form-data" class="custom-form">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        {% if field.name not in "entregable,generado_por_ia,permite_entrega_tardia" %}
+                            <div class="form-group mb-4">
+                                {% if field.name != "archivo" %}
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                {% endif %}
+                                {% if field.name == "archivo" %}
+                                    <div class="file-group">
+                                        <div class="file-actions">
+                                            {% if field.value %}
+                                                <button type="button" class="custom-button file-btn" onclick="clearFile('id_{{ field.name }}')">Borrar</button>
+                                            {% endif %}
+                                            <label class="custom-button file-btn" for="id_{{ field.name }}">Modificar</label>
+                                            {{ field }}
+                                        </div>
+                                        <div class="file-status" id="file-status-{{ field.name }}">
+                                            {% if not field.value %}
+                                                No se eligió ningún archivo
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="form-group mb-4">
+                        <label>Opciones</label>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="entregable" id="id_entregable" {% if form.entregable.value %}checked{% endif %}> <strong>Entregable</strong></label>
+                            <label><input type="checkbox" name="generado_por_ia" id="id_generado_por_ia" {% if form.generado_por_ia.value %}checked{% endif %}> <strong>Generado por IA</strong></label>
+                            <label><input type="checkbox" name="permite_entrega_tardia" id="id_permite_entrega_tardia" {% if form.permite_entrega_tardia.value %}checked{% endif %}> <strong>Permitir entrega tardía</strong></label>
+                        </div>
+                    </div>
+                    <div class="text-center mt-4">
+                        <button type="submit" class="custom-button">Actualizar</button>
+                        <a href="{% url 'board' curso.codigo_acceso %}" class="custom-button">Volver</a>
+                    </div>
+                </form>
             </div>
-        {% endif %}
-    {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
 
-    <button type="submit" class="btn btn-success">Actualizar</button>
-    <a href="{% url 'board' curso.codigo_acceso %}" class="btn btn-secondary">Volver</a>
-</form>
+{% block scripts %}
+    {{ block.super }}
+    <script>
+        function clearFile(inputId) {
+            const fileInput = document.getElementById(inputId);
+            const fileStatus = document.getElementById('file-status-' + inputId.split('id_')[1]);
+            const fileActions = fileInput.parentElement;
 
-</div>
+            // Clear the file input
+            fileInput.value = '';
+
+            // Update the status message
+            fileStatus.textContent = 'No se eligió ningún archivo';
+
+            // Remove the "Borrar" button
+            const deleteButton = fileActions.querySelector('button.file-btn');
+            if (deleteButton) {
+                deleteButton.remove();
+            }
+        }
+    </script>
 {% endblock %}
