@@ -130,7 +130,7 @@
             {% endif %}
 
             {% for field in form %}
-                {% if field.name != 'delete_photo' and field.name != 'photo' %}
+                {% if field.name != 'delete_photo' and field.name != 'foto_perfil' %}
                     <div class="form-group mb-4">
                         <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
@@ -144,16 +144,18 @@
             <div class="form-group mb-4">
                 <label>FOTO PERFIL</label>
                 <div class="photo-section">
-                    {% if form.instance.photo %}
-                        <span id="current-photo">Actualmente: <a href="{{ form.instance.photo.url }}">{{ form.instance.photo.url }}</a></span>
+                    {% if form.instance.foto_perfil %}
+                        <span id="current-photo">Actualmente: <a href="{{ form.instance.foto_perfil.url }}">{{ form.instance.foto_perfil.url }}</a></span>
                     {% endif %}
                     <div class="file-input">
-                        <button type="button" onclick="document.getElementById('id_photo').click()">Elegir archivo</button>
-                        <input type="file" name="photo" id="id_photo" style="display: none;">
-                        <span id="file-name">{% if form.photo.value %} {{ form.photo.value.name }} {% else %} No se eligió ningún archivo {% endif %}</span>
+                        <button type="button" onclick="document.getElementById('id_foto_perfil').click()">Elegir archivo</button>
+                        <input type="file" name="foto_perfil" id="id_foto_perfil" style="display: none;" onchange="updateFileName()">
+                        <span id="file-name">{% if form.foto_perfil.value %} {{ form.foto_perfil.value.name }} {% else %} No se eligió ningún archivo {% endif %}</span>
                     </div>
-                    <button type="button" class="delete-button" onclick="deletePhoto()">Borrar</button>
-                    <input type="checkbox" name="delete_photo" id="id_delete_photo" style="display: none;">
+                    {% if form.instance.foto_perfil %}
+                        <button type="button" class="delete-button" onclick="deletePhoto()">Borrar</button>
+                        <input type="checkbox" name="delete_photo" id="id_delete_photo" style="display: none;">
+                    {% endif %}
                 </div>
             </div>
 
@@ -171,7 +173,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.querySelector("form.custom-form");
     const emailInput = form.querySelector("input[name='email']");
-    const photoInput = document.getElementById('id_photo');
+    const photoInput = document.getElementById('id_foto_perfil');
     const fileNameSpan = document.getElementById('file-name');
     const currentPhotoSpan = document.getElementById('current-photo');
     const deletePhotoCheckbox = document.getElementById('id_delete_photo');
@@ -199,13 +201,13 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    photoInput.addEventListener('change', function () {
+    window.updateFileName = function () {
         if (photoInput.files.length > 0) {
             fileNameSpan.textContent = photoInput.files[0].name;
         } else {
             fileNameSpan.textContent = "No se eligió ningún archivo";
         }
-    });
+    };
 
     window.deletePhoto = function () {
         deletePhotoCheckbox.checked = true;

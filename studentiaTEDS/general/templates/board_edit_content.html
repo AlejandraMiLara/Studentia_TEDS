@@ -50,7 +50,7 @@
             border: 2px solid #1A3C5A !important;
             border-radius: 8px !important;
             padding: 12px !important;
-            width: 100% !important;
+            width: 100 !important;
             max-width: 500px;
             margin: 0 auto;
             transition: border-color 0.3s ease !important;
@@ -67,9 +67,10 @@
 
         .custom-form .form-group .file-group {
             display: flex;
-            flex-direction: column;
+            flex-direction: column; /* Asegura que los elementos estén en columna */
             gap: 5px;
             min-height: 100px;
+            position: relative; /* Para posicionar el input oculto */
         }
 
         .custom-form .form-group .file-actions {
@@ -77,17 +78,18 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
+            justify-content: center; /* Centra los botones horizontalmente */
         }
 
         .custom-form .form-group input[type="file"] {
-            border: none !important;
-            padding: 0 !important;
-            max-width: 350px;
-            flex: 1;
-            height: 35px;
-            box-sizing: border-box;
-            display: none; /* Ocultar el input nativo */
-            visibility: hidden; /* Asegurar que no interfiera */
+            position: absolute;
+            opacity: 0; /* Oculta el input pero lo mantiene funcional */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+            z-index: -1; /* Coloca el input detrás de los botones */
         }
 
         .custom-form .form-group .file-status {
@@ -184,6 +186,14 @@
         .custom-button:hover {
             background-color: #FF5733 !important;
         }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: 5px; /* Espacio entre el texto "Actualmente:" y los botones */
+        }
     </style>
 {% endblock %}
 
@@ -199,16 +209,19 @@
                     {% for field in form %}
                         {% if field.name not in "entregable,generado_por_ia,permite_entrega_tardia" %}
                             <div class="form-group mb-4">
-                                {% if field.name != "archivo" %}
-                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {% endif %}
+                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                                 {% if field.name == "archivo" %}
                                     <div class="file-group">
                                         <div class="file-actions">
                                             {% if field.value %}
-                                                <button type="button" class="custom-button file-btn" onclick="clearFile('id_{{ field.name }}')">Borrar</button>
+                                                <p style="margin: 0; font-family: 'Poppins', sans-serif; font-size: 1rem;">Actualmente: <a href="{{ field.value.url }}">{{ field.value.name }}</a></p>
                                             {% endif %}
-                                            <label class="custom-button file-btn" for="id_{{ field.name }}">Modificar</label>
+                                            <div class="button-group">
+                                                {% if field.value %}
+                                                    <button type="button" class="custom-button file-btn" onclick="clearFile('id_{{ field.name }}')">Borrar</button>
+                                                {% endif %}
+                                                <label class="custom-button file-btn" for="id_{{ field.name }}">Modificar</label>
+                                            </div>
                                             {{ field }}
                                         </div>
                                         <div class="file-status" id="file-status-{{ field.name }}">
@@ -250,16 +263,20 @@
             const fileStatus = document.getElementById('file-status-' + inputId.split('id_')[1]);
             const fileActions = fileInput.parentElement;
 
-            // Clear the file input
+            // Limpiar el input de archivo
             fileInput.value = '';
 
-            // Update the status message
+            // Actualizar el mensaje de estado
             fileStatus.textContent = 'No se eligió ningún archivo';
 
-            // Remove the "Borrar" button
+            // Eliminar el botón "Borrar" y el texto "Actualmente:"
             const deleteButton = fileActions.querySelector('button.file-btn');
+            const currentFileText = fileActions.querySelector('p');
             if (deleteButton) {
                 deleteButton.remove();
+            }
+            if (currentFileText) {
+                currentFileText.remove();
             }
         }
     </script>
