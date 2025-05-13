@@ -268,7 +268,7 @@ def other_profile(request, id):
     ).exists()
 
     if not (cursos_comunes or como_profesor or como_estudiante):
-        return HttpResponseForbidden("No tienes permiso para ver este perfil.")
+        return render(request, '403.html', status=403)
 
     return render(request, 'other_profile.html', {'alumno': alumno})
 
