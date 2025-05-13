@@ -171,6 +171,41 @@ input[type="checkbox"][id$="-clear"] {
 </section>
 
 <script>
+
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form.custom-form");
+    const emailInput = form.querySelector("input[name='email']");
+
+    if (!emailInput) return; // Si no hay campo email, salimos
+
+    // Buscar el contenedor del campo (donde están el label y el input)
+    const formGroup = emailInput.closest('.form-group');
+
+    // Crear el div de error
+    const errorDiv = document.createElement("div");
+    errorDiv.className = "text-danger";
+    errorDiv.style.display = "none";
+    errorDiv.textContent = "Por favor, complete este campo";
+    formGroup.appendChild(errorDiv);
+
+    // Mostrar error al enviar
+    form.addEventListener("submit", function (e) {
+        if (emailInput.value.trim() === "") {
+            e.preventDefault(); // Detener el envío
+            errorDiv.style.display = "block";
+            emailInput.focus();
+        }
+    });
+
+    // Ocultar error al escribir
+    emailInput.addEventListener("input", function () {
+        if (emailInput.value.trim() !== "") {
+            errorDiv.style.display = "none";
+        }
+    });
+});
+
+    
 document.addEventListener("DOMContentLoaded", function () {
     const form = document.querySelector("form.custom-form");
     const photoInput = document.getElementById('id_foto_perfil');
