@@ -1,0 +1,34 @@
+<h1>{{ examen.titulo }}</h1>
+<p>{{ examen.descripcion }}</p>
+<p>Inicio: {{ examen.fecha_inicio }} | Fin: {{ examen.fecha_fin }}</p>
+<p>Estado: 
+    {% if disponible %} Disponible 
+    {% elif estado == "respondido" %} Ya respondido 
+    {% else %} Cerrado {% endif %}
+</p>
+
+{% if es_docente %}
+    <h3>Preguntas del examen:</h3>
+    {% for pregunta in preguntas %}
+        <div style="margin-bottom: 10px;">
+            <strong>{{ pregunta.texto }}</strong> ({{ pregunta.get_tipo_display }})
+            <ul>
+                {% for opcion in pregunta.opcion_set.all %}
+                    <li>{{ opcion.texto }}{% if opcion.es_correcta %} ✅{% endif %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+    
+
+{% elif estado == "disponible" %}
+    <a class="btn btn-success" href="{% url 'iniciar_examen' examen.slug %}">Iniciar examen</a>
+
+{% elif estado == "respondido" %}
+    <p>Ya has respondido este examen.</p>
+{% else %}
+    <p>Este examen ya no está disponible.</p>
+{% endif %}
+
+<!-- Botón visible para todos -->
+<a class="btn btn-secondary mt-3" href="{% url 'board' examen.curso.codigo_acceso %}">Volver al curso</a>

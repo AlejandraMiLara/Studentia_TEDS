@@ -1,0 +1,20 @@
+{% block content %}
+<h2>Alumnos con retroalimentación en "{{ examen.titulo }}"</h2>
+
+{% if estudiantes %}
+  <ul>
+    {% for estudiante in estudiantes %}
+      <li>
+        {{ estudiante.estudiante__username }} ({{ estudiante.estudiante__email }}) -
+        Puntuación total: <strong>{{ estudiante.puntaje_total }}</strong>
+        <a href="{% url 'editar_retroalimentacion' examen.id estudiante.estudiante__id %}" class="btn btn-sm btn-primary">Editar</a>
+        <a href="{% url 'eliminar_retroalimentacion' examen.id estudiante.estudiante__id %}" class="btn btn-danger btn-sm">Eliminar</a>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No hay alumnos con retroalimentación para este examen.</p>
+{% endif %}
+
+<a class="btn btn-secondary" href="{% url 'lista_retroalimentacion' codigo_acceso %}">Volver</a>
+{% endblock %}

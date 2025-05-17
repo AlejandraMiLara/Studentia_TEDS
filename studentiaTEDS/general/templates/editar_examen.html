@@ -1,0 +1,25 @@
+
+
+{% block content %}
+<h2>Editar Examen: {{ examen.titulo }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <a href="{% url 'listar_preguntas' examen.slug %}" class="btn btn-info">Preguntas</a>
+    <br>
+    <br>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'board' examen.curso.codigo_acceso %}" class="btn btn-secondary">Cancelar</a>
+</form>
+
+{% if messages %}
+    <ul>
+    {% for message in messages %}
+        <li {% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+{% endblock %}

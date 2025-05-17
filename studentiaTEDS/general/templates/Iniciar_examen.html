@@ -1,0 +1,24 @@
+<h2>{{ examen.titulo }}</h2>
+<p><strong>Descripción:</strong> {{ examen.descripcion }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    {% for pregunta in preguntas %}
+        <div class="mb-4">
+            <p><strong>{{ forloop.counter }}. {{ pregunta.texto }}</strong> ({{ pregunta.get_tipo_display }})</p>
+
+            {% if pregunta.tipo == "opcion_multiple" or pregunta.tipo == "verdadero_falso" %}
+                {% for opcion in pregunta.opcion_set.all %}
+                    <label>
+                        <input type="radio" name="pregunta_{{ pregunta.id }}" value="{{ opcion.id }}">
+                        {{ opcion.texto }}
+                    </label><br>
+                {% endfor %}
+            {% elif pregunta.tipo == "abierta" %}
+                <textarea name="pregunta_{{ pregunta.id }}" rows="3" cols="50" placeholder="Tu respuesta..."></textarea>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-success">Enviar respuestas</button>
+</form>

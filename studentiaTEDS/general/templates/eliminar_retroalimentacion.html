@@ -1,0 +1,13 @@
+{% block content %}
+<h2>Confirmar Eliminación de Retroalimentación</h2>
+
+<p>¿Estás seguro que deseas eliminar la retroalimentación de <strong>{{ estudiante.username }}</strong> en el examen <strong>{{ examen.titulo }}</strong>?</p>
+
+<p>Esta acción eliminará los comentarios y puntuaciones asociadas, pero no las preguntas ni el historial del examen.</p>
+
+<form method="post" action="{% url 'eliminar_retroalimentacion' examen.id estudiante.id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Sí, eliminar retroalimentación</button>
+    <a href="{% url 'alumnos_con_retroalimentacion' examen.id %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

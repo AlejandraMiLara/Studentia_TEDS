@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.conf import settings
+from django.utils.text import slugify
+from django.db.models import Count
 
 #primer sprint
 
@@ -106,3 +108,66 @@ class Envio(models.Model):
     def __str__(self):
         return f"{self.alumno.username} envió {self.actividad.titulo}"
 
+
+#Tercer Sprint 
+
+class Examen(models.Model):
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
+    creado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    titulo = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
+    descripcion = models.TextField(blank=True)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    entregas_tardias = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.titulo)
+            slug = base_slug
+            contador = 1
+            while Examen.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{contador}"
+                contador += 1
+            self.slug = slug
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.titulo
+
+class Pregunta(models.Model):
+    TIPO_PREGUNTA_CHOICES = [
+        ('abierta', 'Abierta'),
+        ('opcion_multiple', 'Opción Múltiple'),
+        ('verdadero_falso', 'Verdadero/Falso'),
+    ]
+
+    examen = models.ForeignKey(Examen, on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+    tipo = models.CharField(max_length=20, choices=TIPO_PREGUNTA_CHOICES, default='abierta')
+
+    def __str__(self):
+        return self.texto
+
+class Opcion(models.Model):
+    pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE)
+    texto = models.CharField(max_length=255)
+    es_correcta = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.texto
+    
+class Respuesta(models.Model):
+    examen = models.ForeignKey(Examen, on_delete=models.CASCADE)
+    estudiante = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE)
+    respuesta_texto = models.TextField(blank=True, null=True)
+    opcion_seleccionada = models.ForeignKey(Opcion, null=True, blank=True, on_delete=models.SET_NULL)
+    puntaje = models.PositiveIntegerField(null=True, blank=True)
+    comentario = models.TextField(blank=True, null=True)
+
+    class Meta:
+        unique_together = ('examen', 'estudiante', 'pregunta')
+        
+        

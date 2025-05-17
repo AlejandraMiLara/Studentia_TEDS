@@ -1,0 +1,13 @@
+
+{% block content %}
+<div class="container py-5">
+    <h2>Crear Examen para {{ curso.nombre_curso }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit" class="btn btn-primary">Guardar Examen</button>
+        <a href="{% url 'board' curso.codigo_acceso %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

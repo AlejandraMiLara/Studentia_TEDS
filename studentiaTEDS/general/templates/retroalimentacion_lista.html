@@ -1,0 +1,32 @@
+<h2>Retroalimentación</h2>
+
+{% if mensaje %}
+    <p>{{ mensaje }}</p>
+{% else %}
+    <ul>
+        {% if es_docente %}
+            {% if examenes %}
+                {% for examen in examenes %}
+                    <li>
+                        <a href="{% url 'alumnos_con_retroalimentacion' examen.id %}">
+                            {{ examen.titulo }}
+                        </a>
+                    </li>
+                {% endfor %}
+            {% else %}
+            No hay exámenes con retroalimentación disponible.
+            {% endif %}
+        {% else %}
+            {% for examen, puntaje in examenes.items %}
+                <li>
+                    <a href="{% url 'detalle_retroalimentacion' examen.id %}">
+                        {{ examen.titulo }}
+                    </a> - Puntuación total: <strong>{{ puntaje }}</strong>
+                </li>
+            {% endfor %}
+        {% endif %}
+    </ul>
+{% endif %}
+
+<!-- Botón de volver -->
+<a href="{% url 'board' codigo_acceso %}" class="btn btn-secondary mt-3">Volver al curso</a>

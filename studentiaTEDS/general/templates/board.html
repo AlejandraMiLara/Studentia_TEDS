@@ -171,11 +171,50 @@
                     <h3 class="custom-subtitle">Acciones Rápidas</h3>
                     <a href="{% url 'board_add_content' curso.codigo_acceso %}" class="custom-button">Agregar Contenido</a>
                     <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="custom-button">Ver alumnos inscritos</a>
+                    <a href="{% url 'crear_examen' curso.codigo_acceso %}" class="custom-button">Crear Examen</a>
+                    <a href="{% url 'examenes_por_calificar' curso.codigo_acceso %}" class="custom-button">Calificar Exámenes</a>
+                    <a href="{% url 'lista_retroalimentacion' curso.codigo_acceso %}" class="custom-button">Ver Retroalimentaciónes</a>
                 {% else %}
+                    <h3 class="custom-subtitle">Acciones Rápidas</h3>
                     <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="custom-button">Ver alumnos inscritos</a>
+                    <a href="{% url 'lista_retroalimentacion' curso.codigo_acceso %}" class="custom-button">Ver Retroalimentaciónes</a>
                 {% endif %}
 
                 <h3 class="custom-subtitle">Tablero</h3>
+                {% if examenes %}
+                    <ul class="activity-list">
+                        {% for examen in examenes %}
+                            <li>
+                                <div>
+                                    <strong>{{ examen.titulo }}</strong> 
+                                    <span class="badge bg-primary">Examen</span>
+                                    {% if examen.entregas_tardias %}
+                                        <span class="badge bg-info">Permite entrega tardía</span>
+                                    {% endif %}
+                                    <br>
+                                    <small class="text-muted">
+                                        Disponible del {{ examen.fecha_inicio|date:"d M Y" }} al {{ examen.fecha_fin|date:"d M Y" }}.
+                                    </small>
+                                </div>
+                                <div class="button-group">
+                                    <a href="{% url 'ver_examen' examen.slug %}" class="custom-button custom-button--sm custom-button--view" title="Ver">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% if request.user == curso.id_profesor %}
+                                        <a href="{% url 'editar_examen' examen.slug %}" class="custom-button custom-button--sm custom-button--edit" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'eliminar_examen' examen.slug %}" class="custom-button custom-button--sm custom-button--delete" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-message">No hay exámenes creados para este curso.</p>
+                {% endif %}
 
                 {% if actividades %}
                     <ul class="activity-list">

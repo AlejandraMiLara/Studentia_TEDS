@@ -1,0 +1,17 @@
+
+{% block content %}
+<h2>Retroalimentación: {{ examen.titulo }}</h2>
+
+{% for r in respuestas %}
+  <div class="pregunta">
+    <p><strong>{{ r.pregunta.texto }}</strong></p>
+    <p><em>Respuesta:</em> {{ r.respuesta_texto|default:r.opcion_seleccionada }}</p>
+    <p><strong>Puntaje recibido:</strong> {{ r.puntaje }}</p>
+    {% if r.comentario %}
+      <p><strong>Comentario:</strong> {{ r.comentario }}</p>
+    {% endif %}
+  </div>
+{% endfor %}
+
+<a href="{% url 'lista_retroalimentacion' codigo_acceso %}">Volver</a>
+{% endblock %}

@@ -37,9 +37,31 @@ urlpatterns = [
     path("board/<str:codigo_acceso>/actividad/<int:id_actividad>/edit", views.content_edit, name="content_edit"),
     path("board/<str:codigo_acceso>/actividad/<int:id_actividad>/delete", views.content_delete, name="content_delete"),
     path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/view', views.content_detail, name='content_detail'),
-
-
+    
+    #Tercer sprint 
+    path('board/<str:codigo_acceso>/add/examen/', views.crear_examen, name='crear_examen'),
+    path('examenes/<slug:slug>/preguntas/', views.listar_preguntas, name='listar_preguntas'),
+    path('examenes/<slug:slug>/agregar/', views.agregar_pregunta, name='agregar_pregunta'),
+    path('examenes/<slug:slug>/ver/', views.ver_examen, name='ver_examen'),
+    path('examenes/<slug:slug>/iniciar/', views.iniciar_examen, name='iniciar_examen'),
+    path('examenes/<slug:slug>/editar/', views.editar_examen, name='editar_examen'),
+    path('examenes/<slug:slug>/eliminar/', views.eliminar_examen, name='eliminar_examen'),
+    path('examen/<slug:slug>/pregunta/<int:pk>/editar/', views.editar_pregunta, name='editar_pregunta'),
+    path('examen/<slug:slug>/pregunta/<int:pk>/eliminar/', views.eliminar_pregunta, name='eliminar_pregunta'),
+    path('curso/<str:codigo_acceso>/calificar/', views.examenes_por_calificar, name='examenes_por_calificar'),
+    path('examen/<slug:slug>/estudiantes/', views.seleccionar_estudiante, name='seleccionar_estudiante'),
+    path('examen/<slug:slug>/calificar/<int:estudiante_id>/', views.calificar_respuestas, name='calificar_respuestas'),
+    path('mis-retroalimentaciones/<str:codigo_acceso>/', views.lista_retroalimentacion, name='lista_retroalimentacion'),
+    path('retroalimentacion/<int:examen_id>/', views.detalle_retroalimentacion, name='detalle_retroalimentacion'),
+    path('editar-retroalimentacion/<int:examen_id>/', views.alumnos_con_retroalimentacion, name='alumnos_con_retroalimentacion'),
+    path('editar-retroalimentacion/<int:examen_id>/<int:estudiante_id>/editar/', views.editar_retroalimentacion, name='editar_retroalimentacion'),
+    path('editar-retroalimentacion/<int:examen_id>/<int:estudiante_id>/eliminar/', views.eliminar_retroalimentacion, name='eliminar_retroalimentacion'),
+    
 ]
+
+    
+
+
 
 
 if settings.DEBUG:

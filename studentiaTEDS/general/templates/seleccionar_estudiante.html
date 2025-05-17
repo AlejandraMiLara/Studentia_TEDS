@@ -1,0 +1,20 @@
+
+{% block content %}
+<h2>Seleccionar estudiante para calificar en "{{ examen.titulo }}"</h2>
+
+{% if estudiantes %}
+    <ul>
+    {% for estudiante in estudiantes %}
+        <li>
+            <a href="{% url 'calificar_respuestas' slug=examen.slug estudiante_id=estudiante.id %}">
+                {{ estudiante.get_full_name|default:estudiante.username }}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No hay estudiantes con respuestas para calificar.</p>
+{% endif %}
+
+<a href="{% url 'examenes_por_calificar' codigo_acceso=examen.curso.codigo_acceso %}">Volver a exámenes</a>
+{% endblock %}

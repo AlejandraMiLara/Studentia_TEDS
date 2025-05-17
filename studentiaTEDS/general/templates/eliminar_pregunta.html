@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <h2>Eliminar Pregunta</h2>
+    <p>¿Estás seguro de que deseas eliminar la pregunta: "{{ pregunta.texto }}"?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+        <a href="{% url 'listar_preguntas' examen.slug %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

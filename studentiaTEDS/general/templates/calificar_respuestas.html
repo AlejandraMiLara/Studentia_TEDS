@@ -1,0 +1,41 @@
+
+
+<form method="post">
+  {% csrf_token %}
+  {% for respuesta in respuestas %}
+    <div class="question" style="margin-bottom: 20px; padding: 10px; border: 1px solid #ccc;">
+      <p><strong>Pregunta:</strong> {{ respuesta.pregunta.texto }}</p>
+
+      <p><strong>Respuesta del estudiante:</strong>
+        {% if respuesta.respuesta_texto %}
+          {{ respuesta.respuesta_texto }}
+        {% elif respuesta.opcion_seleccionada %}
+          {{ respuesta.opcion_seleccionada.texto }}
+        {% else %}
+          <em>Sin respuesta</em>
+        {% endif %}
+      </p>
+
+      {% if respuesta.pregunta.tipo != 'abierta' %}
+        {% with respuesta.pregunta.opcion_set.all as opciones %}
+          {% for opcion in opciones %}
+            {% if opcion.es_correcta %}
+              <p><strong>Respuesta correcta:</strong> {{ opcion.texto }}</p>
+            {% endif %}
+          {% endfor %}
+        {% endwith %}
+      {% endif %}
+
+      <label for="puntaje_{{ respuesta.id }}">Puntaje (0-100):</label>
+      <input type="number" name="puntaje_{{ respuesta.id }}" min="0" max="100" required>
+
+      <br>
+
+      <label for="comentario_{{ respuesta.id }}">Comentario:</label>
+      <textarea name="comentario_{{ respuesta.id }}"></textarea>
+    </div>
+  {% endfor %}
+
+  <button type="submit">Guardar Calificación</button>
+  <a href="{% url 'seleccionar_estudiante' slug=examen.slug %}">Cancelar</a>
+</form>

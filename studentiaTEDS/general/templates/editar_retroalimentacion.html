@@ -1,0 +1,33 @@
+{% block content %}
+<h2>Editar Retroalimentación - {{ estudiante.username }} ({{ examen.titulo }})</h2>
+
+<form method="post">
+  {% csrf_token %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Pregunta</th>
+        <th>Comentario</th>
+        <th>Puntaje</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for respuesta in respuestas %}
+      <tr>
+        <td>{{ respuesta.pregunta.texto }}</td>
+        <td>
+          <textarea name="comentario_{{ respuesta.id }}" class="form-control">{{ respuesta.comentario }}</textarea>
+        </td>
+        <td>
+          <input type="number" name="puntaje_{{ respuesta.id }}" step="0.1" min="0" max="100"
+                 class="form-control" value="{{ respuesta.puntaje }}">
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <button type="submit" class="btn btn-success">Guardar Cambios</button>
+  <a href="{% url 'alumnos_con_retroalimentacion' examen.id %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

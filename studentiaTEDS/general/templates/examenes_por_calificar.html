@@ -1,0 +1,20 @@
+
+{% block content %}
+<h2>Exámenes por calificar en {{ curso.nombre_curso }}</h2>
+
+{% if examenes %}
+    <ul>
+    {% for examen in examenes %}
+        <li>
+            <a href="{% url 'seleccionar_estudiante' slug=examen.slug %}">
+                {{ examen.titulo }}
+            </a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No hay exámenes con respuestas pendientes por calificar.</p>
+{% endif %}
+
+<a href="{% url 'board' codigo_acceso=curso.codigo_acceso %}">Volver al curso</a>
+{% endblock %}

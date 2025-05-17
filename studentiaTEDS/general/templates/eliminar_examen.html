@@ -1,0 +1,16 @@
+{% block content %}
+<section class="w3l-contact-section py-5" style="background-color: #F5F8FF;">
+  <div class="container py-md-5 py-4">
+    <div class="custom-section">
+        <h2 class="custom-title">¿Seguro que deseas eliminar este examen?</h2>
+        <p class="custom-label"><strong>{{ examen.titulo }}</strong> - {{ examen.curso.nombre_curso }}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="custom-button danger-button">Sí, eliminar</button>
+            <a href="{% url 'board' examen.curso.codigo_acceso %}" class="custom-button">Cancelar</a>
+        </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
