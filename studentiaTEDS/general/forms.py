@@ -123,6 +123,7 @@ OpcionFormSet = inlineformset_factory(
     extra=2,
     can_delete=True
 )
+
 class OpcionForm(forms.ModelForm):
     class Meta:
         model = Opcion
@@ -134,3 +135,4 @@ class VerdaderoFalsoForm(forms.Form):
         widget=forms.RadioSelect,
         label="Respuesta correcta"
     )
+    

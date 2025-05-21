@@ -111,8 +111,18 @@
 {% endblock %}
 
 {% block content %}
+
 <section class="w3l-contact-section">
     <div class="custom-section">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert {{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
         <h2 class="custom-title">Alumnos con retroalimentación en "{{ examen.titulo }}"</h2>
 
         {% if estudiantes %}

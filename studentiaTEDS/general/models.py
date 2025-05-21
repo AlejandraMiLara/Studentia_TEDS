@@ -135,6 +135,15 @@ class Examen(models.Model):
 
     def __str__(self):
         return self.titulo
+    
+class Intento(models.Model):
+    examen = models.ForeignKey(Examen, on_delete=models.CASCADE)
+    estudiante = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    fecha_inicio = models.DateTimeField(auto_now_add=True)
+    completado = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.estudiante.username} - {self.examen.titulo} ({'Completado' if self.completado else 'En progreso'})"
 
 class Pregunta(models.Model):
     TIPO_PREGUNTA_CHOICES = [

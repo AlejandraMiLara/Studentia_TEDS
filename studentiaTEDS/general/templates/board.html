@@ -179,8 +179,7 @@
                     <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="custom-button">Ver alumnos inscritos</a>
                     <a href="{% url 'lista_retroalimentacion' curso.codigo_acceso %}" class="custom-button">Ver Retroalimentaciónes</a>
                 {% endif %}
-
-                <h3 class="custom-subtitle">Tablero</h3>
+                <h3 class="custom-subtitle">Lista de Examenes</h3>
                 {% if examenes %}
                     <ul class="activity-list">
                         {% for examen in examenes %}
@@ -215,6 +214,7 @@
                 {% else %}
                     <p class="empty-message">No hay exámenes creados para este curso.</p>
                 {% endif %}
+                <h3 class="custom-subtitle">Tablero</h3>
 
                 {% if actividades %}
                     <ul class="activity-list">

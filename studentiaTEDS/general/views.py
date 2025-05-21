@@ -9,7 +9,7 @@ import string
 from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm, ActividadForm, ExamenForm, PreguntaForm, OpcionForm, VerdaderoFalsoForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
-from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad, Examen, Pregunta, Opcion, Respuesta
+from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad, Examen, Pregunta, Opcion, Respuesta, Intento
 from django import forms
 from django.forms import modelformset_factory, inlineformset_factory
 from django.utils import timezone
@@ -17,6 +17,9 @@ from datetime import date
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from django.urls import reverse
+from django.contrib.messages import get_messages
+from django.core.exceptions import PermissionDenied
+from .decorators import verificar_acceso_curso
 
 User = get_user_model()
 
@@ -136,9 +139,9 @@ def dashboard(request):
         "cursos_creados": cursos_creados,
         "cursos_inscritos": cursos_inscritos
     })
-
+@verificar_acceso_curso
 @login_required
-def board(request, codigo_acceso):
+def board(request, codigo_acceso, curso):
     curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
     actividades = Actividad.objects.filter(curso=curso).order_by('-fecha')
     examenes = Examen.objects.filter(curso=curso).order_by('-fecha_inicio')
@@ -191,6 +194,7 @@ def board_actualizar(request, codigo_acceso):
 
 @login_required
 def inscribirse_curso(request):
+    
     if request.method == "POST":
         form = InscripcionCursoForm(request.POST)
         if form.is_valid():
@@ -418,6 +422,7 @@ def crear_examen(request, codigo_acceso):
 
 @login_required
 def agregar_pregunta(request, slug):
+    
     examen = get_object_or_404(Examen, slug=slug)
 
     # Validar que solo el creador del examen pueda agregar preguntas
@@ -483,22 +488,15 @@ def agregar_pregunta(request, slug):
                 # Validaciones específicas para opción múltiple
                 if opciones_guardadas < 2:
                     messages.error(request, "Debes ingresar al menos 2 opciones.")
-                    pregunta.delete()
-                    return redirect('agregar_pregunta', slug=examen.slug)
+                   # pregunta.delete()
+                   # return redirect('agregar_pregunta', slug=examen.slug)
                 elif opciones_correctas == 0:
                     messages.error(request, "Debes marcar al menos una opción como correcta.")
                     pregunta.delete()
-                    return redirect('agregar_pregunta', slug=examen.slug)
+                   # return redirect('agregar_pregunta', slug=examen.slug)
                 else:
                     messages.success(request, "Pregunta de opción múltiple agregada correctamente.")
                     return redirect('listar_preguntas', slug=examen.slug)
-            else:
-                error_message = "Error en el formulario: "
-                if not pregunta_form.is_valid():
-                    error_message += f"Pregunta - {pregunta_form.errors} "
-                if not formset.is_valid():
-                    error_message += f"Opciones - {formset.errors}"
-                messages.error(request, error_message.strip())
 
         elif tipo == 'verdadero_falso':
             vf_form = VerdaderoFalsoForm(request.POST)
@@ -567,6 +565,7 @@ def listar_preguntas(request, slug):
 
 @login_required
 def editar_pregunta(request, slug, pk):
+    
     examen = get_object_or_404(Examen, slug=slug)
     pregunta = get_object_or_404(Pregunta, id=pk, examen=examen)
 
@@ -596,6 +595,8 @@ def editar_pregunta(request, slug, pk):
         pregunta_form = PreguntaForm(request.POST, instance=pregunta)
         pregunta_form.data = pregunta_form.data.copy()
         pregunta_form.data['tipo'] = pregunta.tipo
+        
+        pregunta_form.fields['tipo'].disabled = True
 
         if tipo == 'opcion_multiple':
             formset = OpcionFormSet(request.POST, queryset=opciones_existentes)
@@ -628,6 +629,7 @@ def editar_pregunta(request, slug, pk):
                     messages.error(request, "Debes mantener al menos 2 opciones.")
                 elif opciones_correctas == 0:
                     messages.error(request, "Debe haber al menos una opción correcta.")
+                    #pregunta.delete()
                 else:
                     messages.success(request, "Pregunta de opción múltiple actualizada correctamente.")
                     return redirect('listar_preguntas', slug=slug)
@@ -660,6 +662,8 @@ def editar_pregunta(request, slug, pk):
 
     else:
         pregunta_form = PreguntaForm(instance=pregunta)
+        
+        pregunta_form.fields['tipo'].disabled = True
 
         if tipo == 'opcion_multiple':
             formset = OpcionFormSet(queryset=opciones_existentes)
@@ -688,6 +692,7 @@ def eliminar_pregunta(request, slug, pk):
 
     if request.method == 'POST':
         pregunta.delete()
+        messages.success(request, "Pregunta eliminada correctamente.")
         return redirect('listar_preguntas', slug=slug)
 
     return render(request, 'eliminar_pregunta.html', {'pregunta': pregunta, 'examen': examen})
@@ -720,6 +725,11 @@ def iniciar_examen(request, slug):
     examen = get_object_or_404(Examen, slug=slug)
     estudiante = request.user
     ahora = timezone.now().date()
+    curso = examen.curso
+
+    # Verificación de acceso
+    if estudiante != examen.creado_por and not AlumnoCurso.objects.filter(curso=curso, alumno=estudiante).exists():
+        raise PermissionDenied("No tienes permiso para presentar este examen.")
 
     if examen.fecha_inicio > ahora or (examen.fecha_fin and examen.fecha_fin < ahora):
         messages.error(request, "Este examen no está disponible en este momento.")
@@ -729,10 +739,17 @@ def iniciar_examen(request, slug):
         messages.info(request, "Eres el creador del examen, no puedes presentarlo.")
         return redirect('ver_examen', slug=examen.slug)
 
-    # ✅ Si ya respondió, no puede entrar
+    # ✅ Verificar si ya ha completado el examen
     if Respuesta.objects.filter(examen=examen, estudiante=estudiante).exists():
         messages.warning(request, "Ya respondiste este examen.")
         return redirect('ver_examen', slug=examen.slug)
+
+    # ✅ Registrar intento si no existe
+    intento, creado = Intento.objects.get_or_create(
+        examen=examen,
+        estudiante=estudiante,
+        completado=False
+    )
 
     if request.method == 'POST':
         for key, value in request.POST.items():
@@ -759,6 +776,10 @@ def iniciar_examen(request, slug):
                 except (Pregunta.DoesNotExist, Opcion.DoesNotExist):
                     continue
 
+        # ✅ Marcar intento como completado
+        intento.completado = True
+        intento.save()
+
         messages.success(request, "Respuestas enviadas correctamente.")
         return redirect('ver_examen', slug=examen.slug)
 
@@ -771,6 +792,7 @@ def iniciar_examen(request, slug):
     
 @login_required
 def editar_examen(request, slug):
+    
     examen = get_object_or_404(Examen, slug=slug)
 
     # Solo el profesor que creó el examen puede editarlo
@@ -801,17 +823,38 @@ def editar_examen(request, slug):
         'form': form,
         'examen': examen,
     })
-    
-def eliminar_examen(request, slug):
-    examen = get_object_or_404(Examen, slug=slug)
-    curso = examen.curso
-    if request.method == "POST":
-        examen.delete()
-        return redirect('board', codigo_acceso=curso.codigo_acceso)
-    return render(request, 'eliminar_examen.html', {'examen': examen})
 
 @login_required
-def examenes_por_calificar(request, codigo_acceso):
+def eliminar_examen(request, slug):
+    examen = get_object_or_404(Examen, slug=slug)
+
+    if request.user != examen.creado_por:
+        raise PermissionDenied("No tienes permiso para eliminar este examen.")
+
+    intentos_activos = Intento.objects.filter(examen=examen, completado=False)
+
+    if intentos_activos.exists():
+        # Si hay intentos activos, no lo eliminamos y mostramos los usuarios en la plantilla
+        return render(request, 'eliminar_examen.html', {
+            'examen': examen,
+            'intentos_activos': intentos_activos
+        })
+
+    if request.method == 'POST':
+        examen.delete()
+        
+        return redirect('board', codigo_acceso=examen.curso.codigo_acceso)
+
+
+
+    return render(request, 'eliminar_examen.html', {
+        'examen': examen,
+        'intentos_activos': []
+    })
+    
+@verificar_acceso_curso
+@login_required
+def examenes_por_calificar(request, codigo_acceso, curso):
     curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
 
     if request.user != curso.id_profesor:
@@ -843,6 +886,7 @@ def seleccionar_estudiante(request, slug):
     
 @login_required
 def calificar_respuestas(request, slug, estudiante_id):
+    
     examen = get_object_or_404(Examen, slug=slug)
     estudiante = get_object_or_404(User, id=estudiante_id)
 
@@ -879,14 +923,42 @@ def calificar_respuestas(request, slug, estudiante_id):
     })
     
 @login_required
-def lista_retroalimentacion(request, codigo_acceso):
+@verificar_acceso_curso
+def lista_retroalimentacion(request, codigo_acceso, curso):
     curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
 
     if request.user.rol == 'Profesor':
+        # Verificar si el docente es el creador del curso
+        if curso.id_profesor != request.user:
+            # Si no es el creador, tratarlo como estudiante (o mostrar mensaje)
+            respuestas = Respuesta.objects.filter(
+                estudiante=request.user,
+                puntaje__isnull=False,
+                examen__curso=curso
+            ).select_related('examen')
+
+            if not respuestas.exists():
+                return render(request, 'retroalimentacion_lista.html', {
+                    'mensaje': 'No hay retroalimentación disponible',
+                    'codigo_acceso': codigo_acceso,
+                    'es_docente': False
+                })
+
+            examenes = {}
+            for respuesta in respuestas:
+                examen = respuesta.examen
+                examenes[examen] = examenes.get(examen, 0) + (respuesta.puntaje or 0)
+
+            return render(request, 'retroalimentacion_lista.html', {
+                'examenes': examenes,
+                'codigo_acceso': codigo_acceso,
+                'es_docente': False
+            })
+
+        # Si es creador, mostrar exámenes con retroalimentación pendiente
         examenes_con_retro = Examen.objects.filter(
             respuesta__puntaje__isnull=False,
-            curso=curso,
-            curso__id_profesor=request.user
+            curso=curso
         ).distinct()
 
         return render(request, 'retroalimentacion_lista.html', {
@@ -895,36 +967,36 @@ def lista_retroalimentacion(request, codigo_acceso):
             'es_docente': True
         })
 
-    # Estudiante
-    respuestas = Respuesta.objects.filter(
-        estudiante=request.user,
-        puntaje__isnull=False,
-        examen__curso=curso
-    ).select_related('examen', 'examen__curso')
+    else:
+        # Para estudiantes normales
+        respuestas = Respuesta.objects.filter(
+            estudiante=request.user,
+            puntaje__isnull=False,
+            examen__curso=curso
+        ).select_related('examen')
 
-    if not respuestas.exists():
+        if not respuestas.exists():
+            return render(request, 'retroalimentacion_lista.html', {
+                'mensaje': 'No hay retroalimentación disponible',
+                'codigo_acceso': codigo_acceso,
+                'es_docente': False
+            })
+
+        examenes = {}
+        for respuesta in respuestas:
+            examen = respuesta.examen
+            examenes[examen] = examenes.get(examen, 0) + (respuesta.puntaje or 0)
+
         return render(request, 'retroalimentacion_lista.html', {
-            'mensaje': 'No hay retroalimentación disponible',
+            'examenes': examenes,
             'codigo_acceso': codigo_acceso,
             'es_docente': False
         })
-
-    # Agrupar por examen y sumar puntaje total
-    examenes = {}
-    for respuesta in respuestas:
-        examen = respuesta.examen
-        if examen not in examenes:
-            examenes[examen] = 0
-        examenes[examen] += respuesta.puntaje or 0
-
-    return render(request, 'retroalimentacion_lista.html', {
-        'examenes': examenes,  # dict con Examen: puntaje_total
-        'codigo_acceso': codigo_acceso,
-        'es_docente': False
-    })
     
+
 @login_required
 def detalle_retroalimentacion(request, examen_id):
+    
     respuestas = Respuesta.objects.filter(estudiante=request.user, examen_id=examen_id).select_related('pregunta')
 
     if not respuestas.exists():
@@ -941,9 +1013,10 @@ def detalle_retroalimentacion(request, examen_id):
         'examen': examen,
         'codigo_acceso': curso.codigo_acceso
     })
-    
+
 @login_required
 def alumnos_con_retroalimentacion(request, examen_id):
+    list(get_messages(request))
     examen = get_object_or_404(Examen, id=examen_id, curso__id_profesor=request.user)
 
     # Obtener la suma de puntajes por estudiante
@@ -964,9 +1037,11 @@ def alumnos_con_retroalimentacion(request, examen_id):
         'codigo_acceso': examen.curso.codigo_acceso
     })
     
-    
+
 @login_required
 def editar_retroalimentacion(request, examen_id, estudiante_id):
+    list(get_messages(request))
+    
     examen = get_object_or_404(Examen, id=examen_id, curso__id_profesor=request.user)
     estudiante = get_object_or_404(User, id=estudiante_id)
 
@@ -998,6 +1073,7 @@ def editar_retroalimentacion(request, examen_id, estudiante_id):
 
 @login_required
 def eliminar_retroalimentacion(request, examen_id, estudiante_id):
+    
     examen = get_object_or_404(Examen, id=examen_id, curso__id_profesor=request.user)
     estudiante = get_object_or_404(User, id=estudiante_id)
 
