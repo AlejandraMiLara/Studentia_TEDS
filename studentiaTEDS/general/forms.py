@@ -115,6 +115,9 @@ class PreguntaForm(forms.ModelForm):
     class Meta:
         model = Pregunta
         fields = ['texto', 'tipo']
+        widgets = {
+            'texto': forms.Textarea(attrs={'rows': 3, 'cols': 40}),
+        }
 
 OpcionFormSet = inlineformset_factory(
     Pregunta,
@@ -128,6 +131,9 @@ class OpcionForm(forms.ModelForm):
     class Meta:
         model = Opcion
         fields = ['texto', 'es_correcta']
+        widgets = {
+            'texto': forms.Textarea(attrs={'rows': 2, 'cols': 30}),
+        }
 
 class VerdaderoFalsoForm(forms.Form):
     respuesta = forms.ChoiceField(
