@@ -84,6 +84,7 @@ class Actividad(models.Model):
     titulo = models.CharField(max_length=255)
     contenido = models.TextField()
     permite_entrega_tardia = models.BooleanField(default=False)
+    fecha_limite = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.titulo} - {self.curso.nombre_curso}"

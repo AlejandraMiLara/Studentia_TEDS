@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- Borrar brs cuando se haga el diseño -->
+<br><br><br><br><br><br><br> 
+
+<h2>Entregas de {{ actividad.titulo }}</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Alumno</th>
+            <th>Archivo</th>
+            <th>Fecha</th>
+            <th>Calificación</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for envio in entregas %}
+        <tr>
+            <td>{{ envio.alumno.username }}</td>
+            <td><a href="{{ envio.archivo.url }}" target="_blank">Ver PDF</a></td>
+            <td>{{ envio.fecha }}</td>
+            <td>{{ envio.calificacion|default:"Sin calificar" }}</td>
+            <td>
+                <a href="{% url 'calificar_entrega' codigo_acceso=curso.codigo_acceso id_envio=envio.id %}">Calificar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

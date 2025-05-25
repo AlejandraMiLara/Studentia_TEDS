@@ -57,6 +57,9 @@ urlpatterns = [
     path('editar-retroalimentacion/<int:examen_id>/<int:estudiante_id>/editar/', views.editar_retroalimentacion, name='editar_retroalimentacion'),
     path('editar-retroalimentacion/<int:examen_id>/<int:estudiante_id>/eliminar/', views.eliminar_retroalimentacion, name='eliminar_retroalimentacion'),
     
+    path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/enviar/', views.enviar_actividad, name='enviar_actividad'),
+    path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/entregas/', views.listar_entregas, name='listar_entregas'),
+    path('board/<str:codigo_acceso>/entrega/<int:id_envio>/calificar/', views.calificar_entrega, name='calificar_entrega'),
 ]
 
     

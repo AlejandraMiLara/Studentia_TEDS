@@ -6,10 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 import random
 import string
-from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm, ActividadForm, ExamenForm, PreguntaForm, OpcionForm, VerdaderoFalsoForm
+from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm, ActividadForm, ExamenForm, PreguntaForm, OpcionForm, VerdaderoFalsoForm, EnvioForm, CalificacionForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
-from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad, Examen, Pregunta, Opcion, Respuesta, Intento
+from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad, Examen, Pregunta, Opcion, Respuesta, Intento, Envio
 from django import forms
 from django.forms import modelformset_factory, inlineformset_factory
 from django.utils import timezone
@@ -386,9 +386,16 @@ def content_detail(request, codigo_acceso, id_actividad):
     curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
     actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso)
 
+    envio = Envio.objects.filter(alumno=request.user, actividad=actividad).first()
+    ya_enviado = envio is not None
+    calificacion = envio.calificacion if envio else None
+
     return render(request, 'board_content_detail.html', {
         'curso': curso,
         'actividad': actividad,
+        'ya_enviado': ya_enviado,
+        'calificacion': calificacion,
+        'now': timezone.now(),
     })
     
     
@@ -1091,4 +1098,121 @@ def eliminar_retroalimentacion(request, examen_id, estudiante_id):
     return render(request, 'eliminar_retroalimentacion.html', {
         'examen': examen,
         'estudiante': estudiante,
+    })
+
+
+# Cuarto sprint
+
+@login_required
+def enviar_actividad(request, codigo_acceso, id_actividad):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso)
+
+    # Solo el alumno que pertenece al curso puede enviar
+    if request.user == curso.id_profesor:
+        return redirect('dashboard')
+
+    if Envio.objects.filter(alumno=request.user, actividad=actividad).exists():
+        messages.warning(request, "Ya enviaste esta actividad.")
+        return redirect('content_detail', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+
+    if request.method == 'POST':
+        form = EnvioForm(request.POST, request.FILES)
+        if form.is_valid():
+            envio = form.save(commit=False)
+            envio.alumno = request.user
+            envio.docente = actividad.docente
+            envio.curso = curso
+            envio.actividad = actividad
+            envio.save()
+            messages.success(request, "Actividad enviada con éxito.")
+            return redirect('content_detail', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+    else:
+        form = EnvioForm()
+
+    return render(request, 'enviar_actividad.html', {
+        'form': form,
+        'actividad': actividad,
+        'curso': curso,
+    })
+
+
+from django.utils import timezone
+
+@login_required
+def enviar_actividad(request, codigo_acceso, id_actividad):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso)
+
+    # Solo el alumno puede enviar
+    if request.user == curso.id_profesor:
+        return redirect('dashboard')
+
+    if Envio.objects.filter(alumno=request.user, actividad=actividad).exists():
+        messages.warning(request, "Ya enviaste esta actividad.")
+        return redirect('content_detail', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+
+    # Validar la fecha limite
+    ahora = timezone.now()
+    if actividad.fecha_limite and not actividad.permite_entrega_tardia:
+        if ahora > actividad.fecha_limite:
+            messages.error(request, "La fecha límite de entrega ha pasado y no se permiten entregas tardías.")
+            return redirect('content_detail', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+
+    if request.method == 'POST':
+        form = EnvioForm(request.POST, request.FILES)
+        if form.is_valid():
+            envio = form.save(commit=False)
+            envio.alumno = request.user
+            envio.docente = actividad.docente
+            envio.curso = curso
+            envio.actividad = actividad
+            envio.save()
+            messages.success(request, "Actividad enviada con éxito.")
+            return redirect('content_detail', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+    else:
+        form = EnvioForm()
+
+    return render(request, 'enviar_actividad.html', {
+        'form': form,
+        'actividad': actividad,
+        'curso': curso,
+    })
+
+
+@login_required
+def listar_entregas(request, codigo_acceso, id_actividad):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, curso=curso, id=id_actividad)
+
+    if request.user != curso.id_profesor:
+        return redirect('dashboard')
+
+    entregas = Envio.objects.filter(actividad=actividad)
+    return render(request, 'listar_entregas.html', {
+        'actividad': actividad,
+        'curso': curso,
+        'entregas': entregas
+    })
+
+
+@login_required
+def calificar_entrega(request, codigo_acceso, id_envio):
+    envio = get_object_or_404(Envio, id=id_envio, curso__codigo_acceso=codigo_acceso)
+
+    if request.user != envio.docente:
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        form = CalificacionForm(request.POST, instance=envio)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Calificación guardada con éxito.")
+            return redirect('listar_entregas', codigo_acceso=codigo_acceso, id_actividad=envio.actividad.id)
+    else:
+        form = CalificacionForm(instance=envio)
+
+    return render(request, 'calificar_entrega.html', {
+        'form': form,
+        'envio': envio
     })

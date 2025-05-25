@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Calificar entrega de {{ envio.alumno.username }}</h2>
+<p>Actividad: {{ envio.actividad.titulo }}</p>
+<p><a href="{{ envio.archivo.url }}" target="_blank">Ver archivo enviado</a></p>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar Calificación</button>
+    <a href="{% url 'listar_entregas' codigo_acceso=envio.curso.codigo_acceso id_actividad=envio.actividad.id %}">Cancelar</a>
+</form>
+{% endblock %}

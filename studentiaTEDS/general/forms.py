@@ -1,8 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import UsuarioPersonalizado, Curso, Reporte, Actividad, Examen, Pregunta, Opcion
+from .models import UsuarioPersonalizado, Curso, Reporte, Actividad, Examen, Pregunta, Opcion, Envio
 from django.forms import modelformset_factory, inlineformset_factory
 from django.forms.models import inlineformset_factory
+from django.utils.timezone import localtime
 
 
 class RegistroUsuarioForm(UserCreationForm):
@@ -92,7 +93,18 @@ class ReportarForm(forms.ModelForm):
 class ActividadForm(forms.ModelForm):
     class Meta:
         model = Actividad
-        fields = ['titulo', 'contenido', 'archivo', 'entregable', 'generado_por_ia', 'permite_entrega_tardia']
+        fields = ['titulo', 'contenido', 'archivo', 'entregable', 'generado_por_ia', 'permite_entrega_tardia', 'fecha_limite']
+        widgets = {
+            'fecha_limite': forms.DateTimeInput(attrs={'type': 'datetime-local'})
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Si hay una fecha límite, convertirla a hora local y formato correcto
+        if self.instance and self.instance.fecha_limite:
+            local_fecha = localtime(self.instance.fecha_limite)
+            self.initial['fecha_limite'] = local_fecha.strftime('%Y-%m-%dT%H:%M')
 
 class ExamenForm(forms.ModelForm):
     class Meta:
@@ -142,3 +154,27 @@ class VerdaderoFalsoForm(forms.Form):
         label="Respuesta correcta"
     )
     
+
+class EnvioForm(forms.ModelForm):
+    class Meta:
+        model = Envio
+        fields = ['archivo']
+        widgets = {
+            'archivo': forms.ClearableFileInput(attrs={'accept': 'application/pdf'}),
+        }
+
+    def clean_archivo(self):
+        archivo = self.cleaned_data.get('archivo')
+        if not archivo:
+            raise forms.ValidationError("Por favor, seleccione un archivo.")
+        if not archivo.name.endswith('.pdf'):
+            raise forms.ValidationError("Solo se permiten archivos PDF.")
+        return archivo
+    
+class CalificacionForm(forms.ModelForm):
+    class Meta:
+        model = Envio
+        fields = ['calificacion']
+        widgets = {
+            'calificacion': forms.NumberInput(attrs={'min': 0, 'max': 100}),
+        }

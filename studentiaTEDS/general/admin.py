@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import UsuarioPersonalizado, Curso, ConfiguracionCurso, Reporte
+from .models import UsuarioPersonalizado, Curso, ConfiguracionCurso, Reporte, Envio
 
 # Register your models here.
 
@@ -38,3 +38,22 @@ class ReporteAdmin(admin.ModelAdmin):
     search_fields = ('reportante__username', 'reportado__username', 'curso__nombre_curso')
 
 admin.site.register(Reporte, ReporteAdmin)
+
+@admin.register(Envio)
+class EnvioAdmin(admin.ModelAdmin):
+    list_display = ('id', 'alumno', 'docente', 'curso', 'actividad', 'fecha', 'calificacion')
+    list_filter = ('curso', 'actividad', 'docente', 'fecha')
+    search_fields = ('alumno__username', 'docente__username', 'curso__nombre_curso', 'actividad__titulo')
+    list_editable = ('calificacion',)
+    readonly_fields = ('fecha',)
+    date_hierarchy = 'fecha'
+    ordering = ('-fecha',)
+
+    # Para mostrar correctamente el nombre del curso y actividad en el admin
+    def curso_nombre(self, obj):
+        return obj.curso.nombre_curso
+    curso_nombre.short_description = 'Curso'
+
+    def actividad_titulo(self, obj):
+        return obj.actividad.titulo
+    actividad_titulo.short_description = 'Actividad'

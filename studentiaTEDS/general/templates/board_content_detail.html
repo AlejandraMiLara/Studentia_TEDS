@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load tz %}
 
 {% block title %}{{ actividad.titulo }} - {{ curso.nombre_curso }}{% endblock %}
 
@@ -91,6 +92,47 @@
             <span class="custom-label">Contenido:</span>
             <div>{{ actividad.contenido|safe }}</div>
         </div>
+
+{% if actividad.fecha_limite %}
+    <p><span class="custom-label">Fecha límite:</span> {{ actividad.fecha_limite|date:"d M Y, H:i" }}</p>
+{% endif %}
+
+{% if actividad.entregable and request.user != curso.id_profesor %}
+
+    {% if actividad.fecha_limite and actividad.fecha_limite|localtime < now|localtime %}
+
+        {% if actividad.permite_entrega_tardia %}
+            <p class="text-warning"><strong>Actividad Expirada:</strong> Se permiten entregas tardías.</p>
+            {% if not ya_enviado %}
+                <a href="{% url 'enviar_actividad' codigo_acceso=curso.codigo_acceso id_actividad=actividad.id %}" class="custom-button mt-3">Enviar Actividad</a>
+            {% else %}
+                <p class="text-success mt-3"><strong>Ya enviaste esta actividad.</strong></p>
+            {% endif %}
+        {% else %}
+            <p class="text-danger"><strong>Actividad Expirada:</strong> No se permiten entregas tardías.</p>
+        {% endif %}
+
+    {% else %}
+        {% if not ya_enviado %}
+            <a href="{% url 'enviar_actividad' codigo_acceso=curso.codigo_acceso id_actividad=actividad.id %}" class="custom-button mt-3">Enviar Actividad</a>
+        {% else %}
+            <p class="text-success mt-3"><strong>Ya enviaste esta actividad.</strong></p>
+
+        {% endif %}
+    {% endif %}
+
+    <hr>
+
+            {% if calificacion is not None %}
+                <p><strong>Calificación:</strong> {{ calificacion }}</p>
+            {% endif %}
+
+{% endif %}
+
+{% if actividad.entregable and request.user == curso.id_profesor %}
+    <a href="{% url 'listar_entregas' codigo_acceso=curso.codigo_acceso id_actividad=actividad.id %}" class="custom-button mt-3">Ver entregas</a>
+{% endif %}
+
 
         <a href="{% url 'board' curso.codigo_acceso %}" class="custom-button mt-4">Volver a Dashboard</a>
     </div>

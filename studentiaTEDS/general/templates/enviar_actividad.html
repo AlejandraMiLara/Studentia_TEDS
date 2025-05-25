@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Enviar Actividad: {{ actividad.titulo }}</h2>
+
+<!-- Borrar brs cuando se haga el diseño -->
+<br><br><br><br><br><br><br> 
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Enviar Actividad</button>
+    <a href="{% url 'content_detail' codigo_acceso=curso.codigo_acceso id_actividad=actividad.id %}">Cancelar</a>
+</form>
+{% endblock %}

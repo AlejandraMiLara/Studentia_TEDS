@@ -174,6 +174,7 @@
                     <a href="{% url 'crear_examen' curso.codigo_acceso %}" class="custom-button">Crear Examen</a>
                     <a href="{% url 'examenes_por_calificar' curso.codigo_acceso %}" class="custom-button">Calificar Exámenes</a>
                     <a href="{% url 'lista_retroalimentacion' curso.codigo_acceso %}" class="custom-button">Ver Retroalimentaciónes</a>
+
                 {% else %}
                     <h3 class="custom-subtitle">Acciones Rápidas</h3>
                     <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="custom-button">Ver alumnos inscritos</a>

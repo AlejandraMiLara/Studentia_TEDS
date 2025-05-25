@@ -206,6 +206,13 @@
                 {{ form.permite_entrega_tardia }}
             </p>
 
+            {{ form.fecha_limite.errors }}
+<p>
+    <label for="{{ form.fecha_limite.id_for_label }}">Fecha límite:</label>
+    {{ form.fecha_limite }}
+</p>
+
+
             <div class="button-group">
                 <button type="submit" class="custom-button" title="Actualizar">
                     Actualizar
