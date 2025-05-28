@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Respuestas del Estudiante{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Examen: {{ examen.nombre }}</h2>
+    <h4>Estudiante: {{ estudiante.get_full_name|default:estudiante.username }}</h4>
+
+    <p>Número de preguntas respondidas: {{ numero_de_preguntas }}</p>
+
+    <hr>
+
+{% for item in preguntas_resultados %}
+  <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px;">
+    <p><strong>Pregunta {{ forloop.counter }}:</strong> {{ item.pregunta.texto }}</p>
+    <p><strong>Respuesta del estudiante:</strong> {{ item.respuesta }}</p>
+    <p>
+      <strong>Evaluación IA:</strong>
+      {% if item.es_correcta %}
+        <span style="color: green;">✅ Correcta</span>
+      {% else %}
+        <span style="color: red;">❌ Incorrecta</span>
+      {% endif %}
+    </p>
+  </div>
+{% endfor %}
+
+    <a href="{% url 'seleccionar_estudiante' slug=examen.slug %}" class="btn btn-secondary mt-4">Volver</a>
+</div>
+{% endblock %}

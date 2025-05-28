@@ -4,6 +4,7 @@ from django.db import models
 from django.conf import settings
 from django.utils.text import slugify
 from django.db.models import Count
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 #primer sprint
 
@@ -181,3 +182,44 @@ class Respuesta(models.Model):
         unique_together = ('examen', 'estudiante', 'pregunta')
         
         
+#
+
+class CalificacionGlobalIA(models.Model):
+    examen = models.ForeignKey(Examen, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    calificacion_global = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    def __str__(self):
+        return f"Global IA - {self.usuario.username} - {self.examen.titulo}: {self.calificacion_global}"
+
+
+class CalificacionPorPreguntaIA(models.Model):
+    examen = models.ForeignKey(Examen, on_delete=models.CASCADE)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    pregunta = models.ForeignKey(Pregunta, on_delete=models.CASCADE)
+    calificacion_global = models.ForeignKey(CalificacionGlobalIA, on_delete=models.CASCADE, related_name='calificaciones_individuales')
+    calificacion_individual = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    def __str__(self):
+        return f"IA - {self.usuario.username} - {self.pregunta.texto[:30]}...: {self.calificacion_individual}"
+
+class RetroalimentacionIA(models.Model):
+    id_retroalimentacion_ia = models.AutoField(primary_key=True)
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    examen = models.ForeignKey('Examen', on_delete=models.CASCADE)
+    estado = models.BooleanField(default=False)
+    
+    id_calificacion_global = models.OneToOneField(
+        CalificacionGlobalIA,
+        on_delete=models.CASCADE,
+        related_name='retroalimentacion_ia',
+        null=True,  # <-- permitir temporalmente nulos
+        blank=True  # <-- opcional para el admin/formularios
+    )
+
+
+    class Meta:
+        unique_together = ('usuario', 'examen')
+
+    def __str__(self):
+        return f"Retroalimentación - {self.usuario} / {self.examen} / Estado: {'✅' if self.estado else '❌'}"

@@ -9,7 +9,7 @@ import string
 from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm, ActividadForm, ExamenForm, PreguntaForm, OpcionForm, VerdaderoFalsoForm, EnvioForm, CalificacionForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
-from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad, Examen, Pregunta, Opcion, Respuesta, Intento, Envio
+from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad, Examen, Pregunta, Opcion, Respuesta, Intento, Envio, CalificacionPorPreguntaIA, CalificacionGlobalIA, RetroalimentacionIA
 from django import forms
 from django.forms import modelformset_factory, inlineformset_factory
 from django.utils import timezone
@@ -25,6 +25,7 @@ from django.conf import settings
 import openai
 from openai import OpenAI
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
 
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -891,8 +892,22 @@ def examenes_por_calificar(request, codigo_acceso, curso):
     
 def seleccionar_estudiante(request, slug):
     examen = get_object_or_404(Examen, slug=slug)
-    estudiantes_ids = Respuesta.objects.filter(examen=examen).values_list('estudiante', flat=True).distinct()
-    estudiantes = User.objects.filter(id__in=estudiantes_ids)
+
+    # IDs de estudiantes que han respondido el examen
+    estudiantes_ids = Respuesta.objects.filter(
+        examen=examen
+    ).values_list('estudiante', flat=True).distinct()
+
+    # Excluir estudiantes con retroalimentación IA ya generada (estado=True)
+    estudiantes_con_ia = RetroalimentacionIA.objects.filter(
+        examen=examen,
+        estado=True
+    ).values_list('usuario_id', flat=True)
+
+    # Filtrar solo los que aún no tienen retroalimentación IA completada
+    estudiantes = User.objects.filter(
+        id__in=estudiantes_ids
+    ).exclude(id__in=estudiantes_con_ia)
 
     context = {
         'examen': examen,
@@ -943,17 +958,27 @@ def calificar_respuestas(request, slug, estudiante_id):
 def lista_retroalimentacion(request, codigo_acceso, curso):
     curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
 
+    # Recuperar exámenes evaluados por IA
+    retroalimentaciones_ia = RetroalimentacionIA.objects.filter(
+        usuario=request.user,
+        examen__curso=curso,
+        estado=True
+    ).select_related('examen')
+
     if request.user.rol == 'Profesor':
-        # Verificar si el docente es el creador del curso
         if curso.id_profesor != request.user:
-            # Si no es el creador, tratarlo como estudiante (o mostrar mensaje)
+            # Docente que no es creador → tratar como estudiante
+
             respuestas = Respuesta.objects.filter(
                 estudiante=request.user,
                 puntaje__isnull=False,
                 examen__curso=curso
             ).select_related('examen')
 
-            if not respuestas.exists():
+            tiene_retro_ia = retroalimentaciones_ia.exists()
+            tiene_respuestas = respuestas.exists()
+
+            if not tiene_respuestas and not tiene_retro_ia:
                 return render(request, 'retroalimentacion_lista.html', {
                     'mensaje': 'No hay retroalimentación disponible',
                     'codigo_acceso': codigo_acceso,
@@ -961,9 +986,16 @@ def lista_retroalimentacion(request, codigo_acceso, curso):
                 })
 
             examenes = {}
+
+            # Calificaciones manuales
             for respuesta in respuestas:
                 examen = respuesta.examen
                 examenes[examen] = examenes.get(examen, 0) + (respuesta.puntaje or 0)
+
+            # Calificaciones IA
+            for retro in retroalimentaciones_ia:
+                examen = retro.examen
+                examenes[examen] = 'IA'
 
             return render(request, 'retroalimentacion_lista.html', {
                 'examenes': examenes,
@@ -971,27 +1003,37 @@ def lista_retroalimentacion(request, codigo_acceso, curso):
                 'es_docente': False
             })
 
-        # Si es creador, mostrar exámenes con retroalimentación pendiente
+        # Si es creador, mostrar exámenes con alguna respuesta
         examenes_con_retro = Examen.objects.filter(
             respuesta__puntaje__isnull=False,
             curso=curso
         ).distinct()
 
+        examenes_ia = Examen.objects.filter(
+            retroalimentacionia__estado=True,
+            retroalimentacionia__examen__curso=curso
+        ).distinct()
+
+        examenes_combinados = (examenes_con_retro | examenes_ia).distinct()
+
         return render(request, 'retroalimentacion_lista.html', {
-            'examenes': examenes_con_retro,
+            'examenes': examenes_combinados,
             'codigo_acceso': codigo_acceso,
             'es_docente': True
         })
 
     else:
-        # Para estudiantes normales
+        # Usuario estudiante
         respuestas = Respuesta.objects.filter(
             estudiante=request.user,
             puntaje__isnull=False,
             examen__curso=curso
         ).select_related('examen')
 
-        if not respuestas.exists():
+        tiene_retro_ia = retroalimentaciones_ia.exists()
+        tiene_respuestas = respuestas.exists()
+
+        if not tiene_respuestas and not tiene_retro_ia:
             return render(request, 'retroalimentacion_lista.html', {
                 'mensaje': 'No hay retroalimentación disponible',
                 'codigo_acceso': codigo_acceso,
@@ -1001,14 +1043,20 @@ def lista_retroalimentacion(request, codigo_acceso, curso):
         examenes = {}
         for respuesta in respuestas:
             examen = respuesta.examen
-            examenes[examen] = examenes.get(examen, 0) + (respuesta.puntaje or 0)
+            if examen not in examenes:
+                examenes[examen] = {'tipo': 'manual', 'puntaje': 0}
+            examenes[examen]['puntaje'] += respuesta.puntaje or 0
+
+
+        for retro in retroalimentaciones_ia:
+            examen = retro.examen
+            examenes[examen] = {'tipo': 'IA'}
 
         return render(request, 'retroalimentacion_lista.html', {
             'examenes': examenes,
             'codigo_acceso': codigo_acceso,
             'es_docente': False
         })
-    
 
 @login_required
 def detalle_retroalimentacion(request, examen_id):
@@ -1251,3 +1299,236 @@ def chatgpt_prompt(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
+
+
+def evaluar_con_ia(pregunta, respuesta_texto):
+    """
+    Simulación de una evaluación por IA.
+    Reemplaza esto con un modelo real o llamada a un servicio.
+    """
+    # Aquí debería ir tu lógica real de IA (por ejemplo, OpenAI o un modelo local).
+    return True if "clave" in respuesta_texto.lower() else False
+
+User = get_user_model()
+
+def calificar_examen_IA(request, slug, estudiante_id):
+    examen = get_object_or_404(Examen, slug=slug)
+    estudiante = get_object_or_404(User, id=estudiante_id)
+
+    # Verifica que solo el docente pueda calificar
+    if request.user != examen.creado_por:
+        return redirect('board', codigo_acceso=examen.curso.codigo_acceso)
+
+    respuestas = Respuesta.objects.filter(
+        examen=examen, estudiante=estudiante
+    ).select_related('pregunta', 'opcion_seleccionada')
+
+    if not respuestas.exists():
+        messages.warning(request, "Este estudiante no ha respondido este examen.")
+        return redirect('seleccionar_estudiante', slug=slug)
+
+    preguntas_respuestas = []
+    resultados_por_pregunta = []
+
+    for r in respuestas:
+        if r.respuesta_texto:
+            respuesta_mostrada = r.respuesta_texto
+        elif r.opcion_seleccionada:
+            respuesta_mostrada = r.opcion_seleccionada.texto
+        else:
+            respuesta_mostrada = "Sin respuesta"
+
+        preguntas_respuestas.append({
+            'pregunta': r.pregunta,
+            'respuesta': respuesta_mostrada
+        })
+
+        # --- Evaluación con IA ---
+        prompt = f"""
+        Pregunta del examen: {r.pregunta.texto}
+        Respuesta del estudiante: {respuesta_mostrada}
+        ¿Es correcta esta respuesta? Responde solo con: sí o no.
+        """
+
+        try:
+            respuesta_ia = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Eres un examinador experto. Evalúa si la respuesta es correcta."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            decision = respuesta_ia.choices[0].message.content.strip().lower()
+            es_correcta = decision.startswith("sí")
+        except Exception as e:
+            es_correcta = False  # En caso de error, mejor asumir incorrecto
+
+        resultados_por_pregunta.append((r.pregunta, respuesta_mostrada, es_correcta))
+
+    numero_de_preguntas = len(resultados_por_pregunta)
+    valor_maximo_pregunta = 100 // numero_de_preguntas
+
+    num_correctas = sum(1 for _, _, correcta in resultados_por_pregunta if correcta)
+    calificacion_final = num_correctas * valor_maximo_pregunta
+
+    # Guardar calificación global
+    calificacion_global, _ = CalificacionGlobalIA.objects.update_or_create(
+        examen=examen,
+        usuario=estudiante,
+        defaults={'calificacion_global': calificacion_final}
+    )
+
+    # Si no todas son correctas, guardar calificaciones individuales
+    if num_correctas != numero_de_preguntas:
+        for pregunta, _, correcta in resultados_por_pregunta:
+            CalificacionPorPreguntaIA.objects.update_or_create(
+                examen=examen,
+                usuario=estudiante,
+                pregunta=pregunta,
+                calificacion_global=calificacion_global,
+                defaults={
+                    'calificacion_individual': valor_maximo_pregunta if correcta else 0
+                }
+            )
+    else:
+        # Si todas fueron correctas, eliminar calificaciones individuales si existían
+        CalificacionPorPreguntaIA.objects.filter(
+            examen=examen, usuario=estudiante
+        ).delete()
+
+    # Pasamos los resultados al template
+    preguntas_resultados = [
+        {
+            'pregunta': pregunta,
+            'respuesta': respuesta,
+            'es_correcta': es_correcta
+        }
+        for pregunta, respuesta, es_correcta in resultados_por_pregunta
+    ]
+
+    RetroalimentacionIA.objects.update_or_create(
+    usuario=estudiante,
+    examen=examen,
+    defaults={'estado': True,'id_calificacion_global': calificacion_global}
+    )
+
+    return render(request, 'calificar_respuestas_IA.html', {
+        'examen': examen,
+        'estudiante': estudiante,
+        'preguntas_respuestas': preguntas_respuestas,
+        'numero_de_preguntas': numero_de_preguntas,
+        'valor_maximo_pregunta': valor_maximo_pregunta,
+        'calificacion_global': calificacion_global,
+        'preguntas_resultados': preguntas_resultados,
+    })
+
+def evaluar_respuesta_con_chatgpt(pregunta, respuesta):
+    prompt = (
+        f"Eres un calificador automático. Evalúa si la siguiente respuesta responde correctamente a la pregunta."
+        f"\n\nPregunta: \"{pregunta}\"\nRespuesta del estudiante: \"{respuesta}\"\n\n"
+        f"Responde únicamente con 'sí' si es correcta o 'no' si no lo es."
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Eres un calificador de exámenes extremadamente preciso."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0
+        )
+        resultado = response.choices[0].message.content.strip().lower()
+        return resultado.startswith("sí")
+    except Exception as e:
+        print("Error evaluando con IA:", str(e))
+        return False  # fallback si falla la IA
+    
+def mostrar_resultado_calificacion_IA(request, slug, estudiante_id):
+    examen = get_object_or_404(Examen, slug=slug)
+    estudiante = get_object_or_404(settings.AUTH_USER_MODEL, id=estudiante_id)
+    calificacion_global = get_object_or_404(CalificacionGlobalIA, examen=examen, usuario=estudiante)
+
+    calificaciones = CalificacionPorPreguntaIA.objects.filter(
+        calificacion_global=calificacion_global
+    ).select_related('pregunta')
+
+    respuestas = Respuesta.objects.filter(examen=examen, estudiante=estudiante)
+    respuestas_dict = {r.pregunta.id: r.respuesta_texto for r in respuestas}
+
+    contexto = {
+        'examen': examen,
+        'estudiante': estudiante,
+        'calificacion_global': calificacion_global,
+        'calificaciones': [
+            {
+                'pregunta': c.pregunta,
+                'calificacion_individual': c.calificacion_individual,
+                'respuesta': respuestas_dict.get(c.pregunta.id, '')
+            } for c in calificaciones
+        ]
+    }
+    return render(request, 'calificar_respuestas_IA.html', contexto)
+
+
+def retroalimentacion_ia_estudiante(request, examen_id):
+    examen = get_object_or_404(Examen, id=examen_id)
+    estudiante = request.user
+
+    # Obtener la retroalimentacion IA para este estudiante y examen
+    retro = RetroalimentacionIA.objects.filter(usuario=estudiante, examen=examen).select_related('id_calificacion_global').first()
+    if not retro or not retro.id_calificacion_global:
+        messages.warning(request, "No hay calificación automática disponible para este examen.")
+        return redirect('lista_retroalimentacion', codigo_acceso=examen.curso.codigo_acceso)
+
+    calificacion_global = retro.id_calificacion_global.calificacion_global
+
+    # Obtener todas las preguntas del examen
+    preguntas = Pregunta.objects.filter(examen=examen)
+
+    preguntas_resultados = []
+
+    for pregunta in preguntas:
+        # Obtener la respuesta del estudiante para esa pregunta
+        respuesta_obj = Respuesta.objects.filter(examen=examen, estudiante=estudiante, pregunta=pregunta).first()
+        if respuesta_obj:
+            if respuesta_obj.respuesta_texto:
+                respuesta_texto = respuesta_obj.respuesta_texto
+            elif respuesta_obj.opcion_seleccionada:
+                respuesta_texto = respuesta_obj.opcion_seleccionada.texto
+            else:
+                respuesta_texto = "Sin respuesta"
+        else:
+            respuesta_texto = "Sin respuesta"
+
+        # Buscar calificacion individual IA para esta pregunta
+        calificacion_individual_obj = CalificacionPorPreguntaIA.objects.filter(
+            examen=examen,
+            usuario=estudiante,
+            pregunta=pregunta
+        ).first()
+
+        # Lógica: si tiene calificación > 0 es correcta, sino incorrecta
+        es_correcta = False
+        if calificacion_individual_obj:
+            es_correcta = calificacion_individual_obj.calificacion_individual > 0
+        else:
+            # Si no existe calificación individual y calif global = 100, entonces es correcta
+            if calificacion_global == 100:
+                es_correcta = True
+
+        preguntas_resultados.append({
+            'pregunta': pregunta,
+            'respuesta': respuesta_texto,
+            'es_correcta': es_correcta
+        })
+
+    numero_de_preguntas = preguntas.count()
+
+    return render(request, 'detalle_retroalimentacion_ia.html', {
+        'examen': examen,
+        'estudiante': estudiante,
+        'numero_de_preguntas': numero_de_preguntas,
+        'calificacion': calificacion_global,
+        'preguntas_resultados': preguntas_resultados,
+    })

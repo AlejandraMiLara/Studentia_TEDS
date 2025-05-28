@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Retroalimentación IA{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Retroalimentación por IA</h2>
+    <h4>Examen: {{ examen.nombre }}</h4>
+    <h5>Estudiante: {{ estudiante.get_full_name|default:estudiante.username }}</h5>
+
+    <p class="mt-2">Número de preguntas respondidas: {{ numero_de_preguntas }}</p>
+    <p class="mb-4">
+        Calificación automática: 
+        <span>
+            {{ calificacion }} / 100
+        </span>
+    </p>
+
+    {% if preguntas_resultados %}
+        {% for item in preguntas_resultados %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pregunta {{ forloop.counter }}</h5>
+                    <p><strong>Texto:</strong> {{ item.pregunta.texto }}</p>
+                    <p><strong>Respuesta del estudiante:</strong> {{ item.respuesta }}</p>
+                    <p>
+                        <strong>Evaluación IA:</strong>
+                        {% if item.es_correcta %}
+                            <span class="text-success">✅ Correcta</span>
+                        {% else %}
+                            <span class="text-danger">❌ Incorrecta</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-warning">No se encontraron resultados de evaluación IA.</div>
+    {% endif %}
+
+    <a href="{% url 'lista_retroalimentacion' codigo_acceso=examen.curso.codigo_acceso %}" class="btn btn-secondary mt-4">
+        Volver a retroalimentación
+    </a>
+</div>
+{% endblock %}

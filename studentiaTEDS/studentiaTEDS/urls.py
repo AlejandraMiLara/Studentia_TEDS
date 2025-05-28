@@ -64,6 +64,9 @@ urlpatterns = [
     path('chatgpt/', views.chatgpt_form, name='chatgpt_form'), 
     path('chatgpt/send/', views.chatgpt_prompt, name='chatgpt_prompt'), 
 
+    path('examen/<slug:slug>/calificar-ia/<int:estudiante_id>/', views.calificar_examen_IA, name='calificar_respuestas_IA'),
+    path('retroalimentacion/ia/<int:examen_id>/', views.retroalimentacion_ia_estudiante, name='retroalimentacion_ia_estudiante'),
+
 ]
 
     

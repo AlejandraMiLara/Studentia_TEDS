@@ -118,13 +118,20 @@
                         <li>No hay exámenes con retroalimentación disponible.</li>
                     {% endif %}
                 {% else %}
-                    {% for examen, puntaje in examenes.items %}
-                        <li>
-                            <a href="{% url 'detalle_retroalimentacion' examen.id %}">
-                                {{ examen.titulo }}
-                            </a> - Puntuación total: <strong>{{ puntaje }}</strong>
-                        </li>
-                    {% endfor %}
+                    {% for examen, datos in examenes.items %}
+    <li>
+        {% if datos.tipo == 'IA' %}
+            <a href="{% url 'retroalimentacion_ia_estudiante' examen.id %}">
+                {{ examen.titulo }}
+            </a> - Evaluado por IA
+        {% else %}
+            <a href="{% url 'detalle_retroalimentacion' examen.id %}">
+                {{ examen.titulo }}
+            </a> - Puntuación total: <strong>{{ datos.puntaje }}</strong>
+        {% endif %}
+    </li>
+{% endfor %}
+
                 {% endif %}
             </ul>
         {% endif %}
