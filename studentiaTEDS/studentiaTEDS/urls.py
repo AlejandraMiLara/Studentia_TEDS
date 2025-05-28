@@ -83,6 +83,11 @@ urlpatterns = [
     path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/envios-ia/', views.envios_por_calificar_ia, name='envios_por_calificar_ia'),
     path('board/<str:codigo_acceso>/envio/<int:id_envio>/calificar-ia/', views.calificar_envio_ia, name='calificar_envio_ia'),
     path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/calificar-todos-ia/', views.calificar_todos_ia, name='calificar_todos_ia'),
+    
+    path('curso/<str:codigo_acceso>/crear_examen_ia/', views.crear_examen_ia, name='crear_examen_ia'),
+    
+    path('<str:codigo_acceso>/vista-previa-examen-ia/', views.vista_previa_examen_ia, name='vista_previa_examen_ia'),
+
 
 ]
 

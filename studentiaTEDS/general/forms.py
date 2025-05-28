@@ -298,3 +298,21 @@ class ConfirmarCalificacionIAForm(forms.Form):
     )
 
 
+class CrearExamenIAForm(forms.Form):
+    tema = forms.CharField(max_length=100, label="Temas del examen")
+    numero_preguntas = forms.IntegerField(min_value=1, label="Numero de preguntas")
+    dificultad = forms.ChoiceField(choices=[('baja', 'Baja'), ('media', 'Media'), ('alta', 'Alta')])
+    tipos = forms.MultipleChoiceField(
+        choices=[('opcion_multiple', 'Opción Múltiple'), ('verdadero_falso', 'Verdadero/Falso'), ('abierta', 'Abierta')],
+        widget=forms.CheckboxSelectMultiple, label="Tipos de pregunta"
+    )
+    fecha_inicio = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+    fecha_fin = forms.DateField(widget=forms.DateInput(attrs={'type': 'date'}))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        fecha_inicio = cleaned_data.get('fecha_inicio')
+        fecha_fin = cleaned_data.get('fecha_fin')
+
+        if fecha_inicio and fecha_fin and fecha_fin < fecha_inicio:
+            raise forms.ValidationError("La fecha de fin no puede ser anterior a la fecha de inicio.")

@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 import random
 import string
-from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm, ActividadForm, ExamenForm, PreguntaForm, OpcionForm, VerdaderoFalsoForm, EnvioForm, CalificacionForm , FormularioReporteRendimiento, ConfirmarCalificacionIAForm, CriterioCalificacionIAForm 
+from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm, ActividadForm, ExamenForm, PreguntaForm, OpcionForm, VerdaderoFalsoForm, EnvioForm, CalificacionForm , FormularioReporteRendimiento, ConfirmarCalificacionIAForm, CriterioCalificacionIAForm , CrearExamenIAForm
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
 from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad, Examen, Pregunta, Opcion, Respuesta, Intento, Envio, CalificacionPorPreguntaIA, CalificacionGlobalIA, RetroalimentacionIA, ReporteRendimiento, CalificacionIA, CriterioCalificacionIA
@@ -2245,4 +2245,137 @@ def configurar_criterios_ia(request, codigo_acceso, id_actividad):
         'actividad': actividad,
         'form': form,
         'editando': criterio_ia is not None
+    })
+
+@login_required
+def crear_examen_ia(request, codigo_acceso):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+
+    if request.method == "POST":
+        form = CrearExamenIAForm(request.POST)
+        if form.is_valid():
+            tema = form.cleaned_data['tema']
+            num_preguntas = form.cleaned_data['numero_preguntas']
+            dificultad = form.cleaned_data['dificultad']
+            tipos = form.cleaned_data['tipos']
+            fecha_inicio = form.cleaned_data['fecha_inicio']
+            fecha_fin = form.cleaned_data['fecha_fin']
+
+            instrucciones = []
+            if 'opcion_multiple' in tipos:
+                instrucciones.append(
+                    "Algunas preguntas deben ser de opción múltiple con 1 respuesta correcta y 3 incorrectas. "
+                    "Formato:\nPREGUNTA: ...\nOPCIONES:\nA. ...\nB. ...\nC. ...\nD. ...\nRESPUESTA CORRECTA: <Letra>"
+                )
+            if 'verdadero_falso' in tipos:
+                instrucciones.append(
+                    "Algunas preguntas deben ser de verdadero o falso. "
+                    "Formato:\nPREGUNTA: ...\nTIPO: verdadero_falso\nRESPUESTA CORRECTA: Verdadero/Falso"
+                )
+            if 'abierta' in tipos:
+                instrucciones.append(
+                    "Algunas preguntas deben ser de respuesta abierta. "
+                    "Formato:\nPREGUNTA: ...\nTIPO: abierta\nRESPUESTA ESPERADA: ..."
+                )
+
+            prompt = f"""Genera {num_preguntas} preguntas mezclando los siguientes tipos: {', '.join(tipos)}.
+Tema: "{tema}", Dificultad: "{dificultad}".
+Sigue los siguientes formatos de ejemplo:
+{chr(10).join(instrucciones)}
+"""
+
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=[
+                        {"role": "system", "content": "Eres un generador de exámenes útil."},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                contenido = response.choices[0].message.content
+                request.session['examen_ia'] = {
+                    'contenido': contenido,
+                    'tema': tema,
+                    'num_preguntas': num_preguntas,
+                    'dificultad': dificultad,
+                    'curso_id': curso.id,
+                    'fecha_inicio': str(form.cleaned_data['fecha_inicio']),
+                    'fecha_fin': str(form.cleaned_data['fecha_fin']),
+                }
+                return redirect('vista_previa_examen_ia', codigo_acceso=curso.codigo_acceso)
+
+            except Exception as e:
+                return render(request, "crear_examen_ia.html", {
+                    "form": form,
+                    "error": f"Error al generar el examen: {str(e)}"
+                })
+
+    else:
+        form = CrearExamenIAForm()
+
+    return render(request, "crear_examen_ia.html", {"form": form, "curso": curso})
+
+
+@login_required
+def vista_previa_examen_ia(request, codigo_acceso):
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    examen_data = request.session.get('examen_ia')
+    if not examen_data:
+        return redirect('dashboard')
+
+    # Esta línea debe estar fuera del if, porque se usa tanto en GET como en POST
+    bloques = examen_data['contenido'].split("PREGUNTA:")
+    bloques = [b.strip() for b in bloques if b.strip()]  # eliminar cadenas vacías
+
+    if request.method == "POST":
+        curso = get_object_or_404(Curso, id=examen_data['curso_id'])
+        examen = Examen.objects.create(
+            titulo=f"Examen generado por IA - {examen_data['tema']}",
+            descripcion=f"{examen_data['num_preguntas']} preguntas, dificultad {examen_data['dificultad']}",
+            curso=curso,
+            creado_por=request.user,
+            fecha_inicio=date.fromisoformat(examen_data['fecha_inicio']),
+            fecha_fin=date.fromisoformat(examen_data['fecha_fin']),
+        )
+
+        for bloque in bloques:
+            if "TIPO: verdadero_falso" in bloque:
+                texto = bloque.split("TIPO:")[0].strip()
+                respuesta = bloque.split("RESPUESTA CORRECTA:")[1].strip()
+                p = Pregunta.objects.create(examen=examen, texto=texto, tipo="verdadero_falso")
+                Opcion.objects.create(pregunta=p, texto="Verdadero", es_correcta=(respuesta.lower() == "verdadero"))
+                Opcion.objects.create(pregunta=p, texto="Falso", es_correcta=(respuesta.lower() == "falso"))
+
+            elif "TIPO: abierta" in bloque or "RESPUESTA ESPERADA:" in bloque:
+                texto = bloque.split("TIPO:")[0].strip() if "TIPO:" in bloque else bloque.split("RESPUESTA ESPERADA:")[0].strip()
+                Pregunta.objects.create(examen=examen, texto=texto, tipo="abierta")
+
+            elif "OPCIONES:" in bloque and "RESPUESTA CORRECTA:" in bloque:
+                partes = bloque.split("OPCIONES:")
+                texto = partes[0].strip()
+                opciones_y_resp = partes[1].split("RESPUESTA CORRECTA:")
+                opciones = opciones_y_resp[0].strip().split("\n")
+                letra_correcta = opciones_y_resp[1].strip()
+
+                p = Pregunta.objects.create(examen=examen, texto=texto, tipo="opcion_multiple")
+
+                for opcion in opciones:
+                    if len(opcion) < 3:
+                        continue
+                    letra = opcion[:1]
+                    texto_opcion = opcion[3:].strip()
+                    Opcion.objects.create(
+                        pregunta=p,
+                        texto=texto_opcion,
+                        es_correcta=(letra.upper() == letra_correcta.upper())
+                    )
+
+        messages.success(request, "Examen creado por IA con éxito.")
+        del request.session['examen_ia']
+        return redirect('listar_preguntas', slug=examen.slug)
+
+    return render(request, "vista_previa_examen_ia.html", {
+        "contenido": examen_data['contenido'],
+        "bloques": bloques,
+        "codigo_acceso": curso.codigo_acceso,
     })
