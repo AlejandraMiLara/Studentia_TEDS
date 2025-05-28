@@ -4,7 +4,7 @@ from general import views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-from general.views import CustomPasswordResetView, CustomPasswordResetConfirmView
+from general.views import CustomPasswordResetView, CustomPasswordResetConfirmView, chatgpt_prompt
 
 urlpatterns = [
     #primer sprint
@@ -60,6 +60,10 @@ urlpatterns = [
     path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/enviar/', views.enviar_actividad, name='enviar_actividad'),
     path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/entregas/', views.listar_entregas, name='listar_entregas'),
     path('board/<str:codigo_acceso>/entrega/<int:id_envio>/calificar/', views.calificar_entrega, name='calificar_entrega'),
+
+    path('chatgpt/', views.chatgpt_form, name='chatgpt_form'), 
+    path('chatgpt/send/', views.chatgpt_prompt, name='chatgpt_prompt'), 
+
 ]
 
     
