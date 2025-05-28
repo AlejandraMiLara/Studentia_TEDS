@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Calificación - {{ calificacion_ia.envio.alumno.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Confirmar Calificación de Código</h2>
+                <a href="{% url 'revisar_calificaciones_ia' curso.codigo_acceso calificacion_ia.envio.actividad.id %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Calificación de Código por IA</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <strong>Estudiante:</strong> {{ calificacion_ia.envio.alumno.username }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Actividad:</strong> {{ calificacion_ia.envio.actividad.titulo }}
+                                </div>
+                            </div>
+
+                            <div class="alert alert-primary">
+                                <h4 class="text-center">
+                                    Calificación Sugerida: 
+                                    <span class="badge bg-primary fs-5">{{ calificacion_ia.calificacion_sugerida }}/100</span>
+                                </h4>
+                            </div>
+
+                            <h6>Retroalimentación de IA:</h6>
+                            <div class="border p-3 mb-3">{{ calificacion_ia.retroalimentacion_ia|linebreaks }}</div>
+
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">{{ form.accion.label }}</label>
+                                    {% for radio in form.accion %}
+                                        <div class="form-check">
+                                            {{ radio.tag }}
+                                            <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                                {{ radio.choice_label }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.calificacion_ajustada.id_for_label }}" class="form-label">{{ form.calificacion_ajustada.label }}</label>
+                                    {{ form.calificacion_ajustada }}
+                                    <div class="form-text">
+                                        Deja vacío para usar la calificación sugerida por IA
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.comentarios_docente.id_for_label }}" class="form-label">{{ form.comentarios_docente.label }}</label>
+                                    {{ form.comentarios_docente }}
+                                </div>
+
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-success btn-lg">
+                                        <i class="fas fa-check"></i> Confirmar Calificación
+                                    </button>
+                                    <button type="button" class="btn btn-warning btn-lg ms-2" onclick="selectRevisar()">
+                                        <i class="fas fa-eye"></i> Revisar Manualmente
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Archivo de Código</h6>
+                        </div>
+                        <div class="card-body text-center">
+                            <a href="{{ calificacion_ia.envio.archivo.url }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-file-code fa-2x"></i>
+                                <br>Ver Código
+                            </a>
+                            <small class="d-block mt-2 text-muted">
+                                Entregado: {{ calificacion_ia.envio.fecha|date:"d/m/Y H:i" }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">Criterios Utilizados</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="small">{{ calificacion_ia.criterios_utilizados|linebreaks }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function selectRevisar() {
+    document.querySelector('input[value="revisar"]').checked = true;
+}
+</script>
+{% endblock %}

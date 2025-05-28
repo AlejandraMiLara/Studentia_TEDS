@@ -6,26 +6,32 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 import random
 import string
-from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm, ActividadForm, ExamenForm, PreguntaForm, OpcionForm, VerdaderoFalsoForm, EnvioForm, CalificacionForm
+from .forms import RegistroUsuarioForm, EditarPerfilForm, CursoForm, InscripcionCursoForm, ReportarForm, ActividadForm, ExamenForm, PreguntaForm, OpcionForm, VerdaderoFalsoForm, EnvioForm, CalificacionForm , FormularioReporteRendimiento, ConfirmarCalificacionIAForm, CriterioCalificacionIAForm 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView, PasswordResetConfirmView
-from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad, Examen, Pregunta, Opcion, Respuesta, Intento, Envio, CalificacionPorPreguntaIA, CalificacionGlobalIA, RetroalimentacionIA
+from .models import Curso, AlumnoCurso, UsuarioPersonalizado, Actividad, Examen, Pregunta, Opcion, Respuesta, Intento, Envio, CalificacionPorPreguntaIA, CalificacionGlobalIA, RetroalimentacionIA, ReporteRendimiento, CalificacionIA, CriterioCalificacionIA
 from django import forms
 from django.forms import modelformset_factory, inlineformset_factory
 from django.utils import timezone
-from datetime import date
+from datetime import date, datetime
 from django.contrib.auth.models import User
-from django.db.models import Sum
+from django.db.models import Sum, Count
+from django.db import models
 from django.urls import reverse
 from django.contrib.messages import get_messages
 from django.core.exceptions import PermissionDenied
-from .decorators import verificar_acceso_curso
+from .decorators import verificar_acceso_curso, docente_curso_requerido, docente_requerido
 
 from django.conf import settings
 import openai
+import json
 from openai import OpenAI
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
+from decimal import Decimal
+from django.utils.html import format_html
+from django.utils import timezone
+
 
 
 client = OpenAI(api_key=settings.OPENAI_API_KEY)
@@ -1531,4 +1537,712 @@ def retroalimentacion_ia_estudiante(request, examen_id):
         'numero_de_preguntas': numero_de_preguntas,
         'calificacion': calificacion_global,
         'preguntas_resultados': preguntas_resultados,
+    })
+
+#Cuarto Sprint
+def generar_pdf_reporte(reporte):
+    from django.http import HttpResponse
+    from django.template.loader import get_template
+    from xhtml2pdf import pisa
+    from io import BytesIO
+    
+    promedios_estudiantes = reporte.obtener_promedios_estudiantes()
+    
+    total_estudiantes = len(promedios_estudiantes)
+    if total_estudiantes > 0:
+        promedio_general = sum(datos['promedio'] for datos in promedios_estudiantes) / total_estudiantes
+        aprobados = len([datos for datos in promedios_estudiantes if datos['promedio'] >= 70])
+        en_riesgo = len([datos for datos in promedios_estudiantes if 60 <= datos['promedio'] < 70])
+        reprobados = len([datos for datos in promedios_estudiantes if datos['promedio'] < 60])
+    else:
+        promedio_general = 0
+        aprobados = en_riesgo = reprobados = 0
+    
+    #Contexto para el template
+    contexto = {
+        'reporte' : reporte,
+        'promedios_estudiantes' : promedios_estudiantes,
+        'total_estudiantes' : total_estudiantes,
+        'promedio_general' : round(promedio_general, 2),
+        'aprobados' : aprobados,
+        'en_riesgo' : en_riesgo,
+        'reprobados' : reprobados,
+    }
+    
+    plantilla = get_template('reporte_pdf.html')
+    html = plantilla.render(contexto)
+    
+    #Crear el PDF
+    resultado = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), resultado)
+    
+    if not pdf.err:
+        #Configurar la respuesta HTTP
+        respuesta = HttpResponse(resultado.getvalue(), content_type='application/pdf')
+        nombre_archivo = f"reporte_{reporte.curso.nombre_curso}_{reporte.fecha_inicio}_{reporte.fecha_fin}.pdf"
+        respuesta['Content-Disposition'] = f'attachment; filename="{nombre_archivo}"'
+        return respuesta
+    
+    return None
+
+@login_required
+def crear_reporte_rendimiento(request):
+    """Vista para crear un nuevo reporte de rendimiento"""
+    if request.method == 'POST':
+        formulario = FormularioReporteRendimiento(request.user, request.POST)
+        if formulario.is_valid():
+            reporte = formulario.save(commit=False)
+            reporte.docente = request.user
+            reporte.save()
+            messages.success(request, "Reporte creado con éxito")
+            return redirect('reportes_curso', codigo_acceso=reporte.curso.codigo_acceso)
+        else:
+            messages.error(request, "Error al generar el reporte, intenta de nuevo")
+    else:
+        formulario = FormularioReporteRendimiento(request.user)
+    
+    return render(request, 'reporte_crear.html', {'formulario': formulario})
+
+
+@login_required
+@verificar_acceso_curso
+def reportes_curso(request, codigo_acceso, curso):
+    if request.user != curso.id_profesor:
+        raise PermissionDenied("Solo el docente puede ver los reportes")
+    
+    reportes = ReporteRendimiento.objects.filter(curso = curso)
+    
+    return render(request, 'reporte_lista.html', {
+        'curso': curso,
+        'reportes': reportes
+    })
+    
+@login_required
+def detalle_reporte(request, id_reporte):
+    reporte = get_object_or_404(ReporteRendimiento, id = id_reporte)
+    
+    #Verificar que el usuario sea el docente del curso
+    if reporte.curso.id_profesor != request.user:
+        raise PermissionDenied("No tienes permiso para ver este reporte")
+    
+    promedios_estudiantes = reporte.obtener_promedios_estudiantes()
+    
+    return render(request, 'reporte_detalle.html', {
+        'reporte': reporte,
+        'promedios_estudiantes': promedios_estudiantes
+    })
+    
+@login_required
+def eliminar_reporte(request, id_reporte):
+    reporte = get_object_or_404(ReporteRendimiento, id=id_reporte)
+    
+    if reporte.curso.id_profesor != request.user:
+        raise PermissionDenied("No tienes permiso para eliminar este reporte")
+    
+    if request.method == 'POST':
+        codigo_acceso = reporte.curso.codigo_acceso
+        try:
+            reporte.delete()
+            messages.success(request, "Reporte eliminado con éxito")
+        except Exception:
+            messages.error(request, "Error al eliminar el reporte, intenta de nuevo")
+            
+        return redirect('reportes_curso', codigo_acceso = codigo_acceso)
+    
+    return render(request, 'reporte_eliminar.html', {'reporte' : reporte})
+
+@login_required
+def descargar_pdf_reporte(request, id_reporte):
+    reporte = get_object_or_404(ReporteRendimiento, id=id_reporte)
+    
+    if reporte.curso.id_profesor != request.user:
+        raise PermissionDenied("No tienes permiso para descargar este reporte")
+    
+    try:
+        respuesta_pdf = generar_pdf_reporte(reporte)
+        if respuesta_pdf:
+            return respuesta_pdf
+        else:
+            messages.error(request, "Error al generar el PDF, intenta de nuevo")
+    except Exception as e:
+        messages.error(request, "Error al generar el PDF, intenta de nuevo")
+        
+    return redirect('detalle_reporte', id_reporte=id_reporte)
+
+
+def generar_calificacion_con_ia(contenido_codigo, lenguaje, criterios, puntaje_maximo, instrucciones_adicionales):
+    """Función para generar calificación de código usando OpenAI (respuesta en texto plano)"""
+    try:
+        prompt = f"""
+        Eres un evaluador experto de código de programación. Debes evaluar el siguiente código en {lenguaje} según los criterios proporcionados.
+
+        CRITERIOS DE EVALUACIÓN:
+        {criterios}
+
+        PUNTAJE MÁXIMO: {puntaje_maximo}
+
+        INSTRUCCIONES ADICIONALES:
+        {instrucciones_adicionales}
+
+        CÓDIGO A EVALUAR:
+        ```{lenguaje}
+        {contenido_codigo}
+        ```
+
+        Por favor, proporciona:
+        1. Una calificación numérica (0 a {puntaje_maximo})
+        2. Retroalimentación detallada explicando la calificación, incluyendo:
+           - Análisis de funcionalidad
+           - Análisis de eficiencia y complejidad
+           - Análisis de estilo y buenas prácticas
+           - Sugerencias específicas de mejora
+        3. Ejemplos de cómo mejorar el código si es necesario
+
+        Responde en formato de texto plano, claro y estructurado.
+        """
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Eres un evaluador experto de código de programación que proporciona calificaciones justas y retroalimentación constructiva."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.3
+        )
+
+        resultado_texto = response.choices[0].message.content
+        return {
+            'respuesta': resultado_texto
+        }
+
+    except Exception as e:
+        raise Exception(f"Error al generar calificación con IA: {str(e)}")
+
+
+def extraer_texto_codigo(ruta_archivo):
+    """Función para extraer código de archivos comunes de programación"""
+    try:
+        # Primero intentamos leer como texto plano (para archivos de código)
+        with open(ruta_archivo, 'r', encoding='utf-8') as archivo:
+            return archivo.read()
+    except UnicodeDecodeError:
+        # Si falla, intentamos con PyPDF2 para PDFs
+        try:
+            import PyPDF2
+            with open(ruta_archivo, 'rb') as archivo:
+                lector = PyPDF2.PdfReader(archivo)
+                texto = ""
+                for pagina in lector.pages:
+                    texto += pagina.extract_text()
+                return texto
+        except Exception:
+            # Si todo falla, devolver mensaje por defecto
+            return "No se pudo extraer el código del archivo. Verifica el formato."
+        
+@login_required
+@docente_curso_requerido
+def procesar_calificacion_ia(request, codigo_acceso, id_actividad):
+    """Procesar calificación automática de código por IA"""
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso, generado_por_ia=True)
+    
+    # Verificar si existen criterios de calificación
+    criterio_ia = getattr(actividad, 'criterio_ia', None)
+    if not criterio_ia:
+        messages.error(request, "Esta actividad no tiene criterios de calificación por IA configurados.")
+        return redirect('configurar_criterios_ia', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+    
+    # Obtener entregas sin calificar
+    entregas_pendientes = Envio.objects.filter(
+        actividad=actividad,
+        calificacion__isnull=True,
+        calificacion_ia__isnull=True
+    )
+    
+    if not entregas_pendientes.exists():
+        messages.info(request, "No hay entregas pendientes de calificar para esta actividad.")
+        return redirect('calificar_actividades_ia', codigo_acceso=codigo_acceso)
+    
+    if request.method == 'POST':
+        calificaciones_exitosas = 0
+        calificaciones_fallidas = 0
+        
+        for envio in entregas_pendientes:
+            try:
+                # Leer el contenido del archivo de código
+                contenido_codigo = extraer_texto_codigo(envio.archivo.path)
+                
+                # Generar calificación con IA
+                resultado_ia = generar_calificacion_con_ia(
+                    contenido_codigo,
+                    criterio_ia.lenguaje_programacion,
+                    criterio_ia.criterios_evaluacion,
+                    criterio_ia.puntaje_maximo,
+                    criterio_ia.instrucciones_adicionales
+                )
+
+                # Extraer calificación y retroalimentación del texto de la IA
+                respuesta_ia = resultado_ia.get('respuesta', '')
+                import re
+                match = re.search(r'calificación numérica.*?(\d+(\.\d+)?)', respuesta_ia, re.IGNORECASE)
+                calificacion = float(match.group(1)) if match else None
+                retroalimentacion = respuesta_ia
+
+                # Guardar calificación de IA
+                CalificacionIA.objects.create(
+                    envio=envio,
+                    calificacion_sugerida=calificacion,
+                    retroalimentacion_ia=retroalimentacion,
+                    criterios_utilizados=criterio_ia.criterios_evaluacion
+                )
+
+                calificaciones_exitosas += 1
+                
+            except Exception as e:
+                calificaciones_fallidas += 1
+                print(f"Error al calificar envío {envio.id}: {str(e)}")
+        
+        if calificaciones_exitosas > 0:
+            messages.success(
+                request, 
+                f"Se procesaron {calificaciones_exitosas} entregas de código con IA. "
+                f"Revisa las calificaciones sugeridas antes de confirmarlas."
+            )
+        
+        if calificaciones_fallidas > 0:
+            messages.warning(
+                request, 
+                f"{calificaciones_fallidas} entregas no pudieron ser procesadas."
+            )
+        
+        return redirect('revisar_calificaciones_ia', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+    
+    return render(request, 'procesar_calificacion_ia.html', {
+        'curso': curso,
+        'actividad': actividad,
+        'entregas_pendientes': entregas_pendientes,
+        'criterio_ia': criterio_ia
+    })
+    
+@login_required
+@docente_curso_requerido
+def actividades_calificables_ia(request, codigo_acceso):
+    """Vista para mostrar actividades que pueden ser calificadas con IA"""
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    
+    # Obtener actividades de código con envíos pendientes de calificar
+    actividades = Actividad.objects.filter(
+        curso=curso,
+        generado_por_ia=True
+    ).annotate(
+        total_envios=Count('envio'),
+        envios_pendientes=Count('envio', filter=models.Q(envio__calificacion__isnull=True))
+    ).filter(envios_pendientes__gt=0)
+    
+    actividades_con_envios = []
+    for actividad in actividades:
+        # Verificar si tiene criterios de IA configurados
+        tiene_criterios = hasattr(actividad, 'criterio_ia')
+        
+        # Solo incluir actividades con criterios configurados
+        if tiene_criterios:
+            actividades_con_envios.append({
+                'actividad': actividad,
+                'envios_pendientes': actividad.envios_pendientes
+            })
+    
+    return render(request, 'calificar_ia/actividades_calificables.html', {
+        'curso': curso,
+        'actividades_con_envios': actividades_con_envios
+    })
+
+@login_required
+@docente_curso_requerido
+def envios_por_calificar_ia(request, codigo_acceso, id_actividad):
+    """Vista para mostrar envíos pendientes de calificar para una actividad"""
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso, generado_por_ia=True)
+    
+    # Verificar si tiene criterios de IA configurados
+    if not hasattr(actividad, 'criterio_ia'):
+        messages.warning(request, "Esta actividad no tiene criterios de calificación por IA configurados.")
+        return redirect('configurar_criterios_ia', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+    
+    # Obtener envíos pendientes de calificar
+    envios = Envio.objects.filter(
+        actividad=actividad,
+        calificacion__isnull=True,
+        calificacion_ia__isnull=True
+    ).select_related('alumno')
+    
+    return render(request, 'calificar_ia/envios_por_calificar.html', {
+        'curso': curso,
+        'actividad': actividad,
+        'envios': envios
+    })
+
+@login_required
+@docente_curso_requerido
+def calificar_envio_ia(request, codigo_acceso, id_envio):
+    """Vista para calificar un envío individual con IA"""
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    envio = get_object_or_404(Envio, id=id_envio, curso=curso, calificacion__isnull=True)
+    actividad = envio.actividad
+    
+    # Verificar si la actividad es calificable por IA
+    if not actividad.generado_por_ia:
+        messages.error(request, "Esta actividad no está configurada para calificación con IA.")
+        return redirect('listar_entregas', codigo_acceso=codigo_acceso, id_actividad=actividad.id)
+    
+    # Verificar si tiene criterios de IA configurados
+    if not hasattr(actividad, 'criterio_ia'):
+        messages.warning(request, "Esta actividad no tiene criterios de calificación por IA configurados.")
+        return redirect('configurar_criterios_ia', codigo_acceso=codigo_acceso, id_actividad=actividad.id)
+    
+    criterio_ia = actividad.criterio_ia
+    
+    if request.method == 'POST':
+        form = ConfirmarCalificacionIAForm(request.POST)
+        if form.is_valid():
+            accion = form.cleaned_data['accion']
+            
+            if accion == 'confirmar':
+                try:
+                    # Extraer el contenido del código
+                    contenido_codigo = extraer_texto_codigo(envio.archivo.path)
+                    
+                    # Generar calificación con IA
+                    resultado_ia = generar_calificacion_con_ia(
+                        contenido_codigo,
+                        criterio_ia.lenguaje_programacion,
+                        criterio_ia.criterios_evaluacion,
+                        criterio_ia.puntaje_maximo,
+                        criterio_ia.instrucciones_adicionales
+                    )
+                    
+                    # Guardar calificación de IA
+                    calificacion_ia = CalificacionIA.objects.create(
+                        envio=envio,
+                        calificacion_sugerida=resultado_ia['calificacion'],
+                        retroalimentacion_ia=resultado_ia['retroalimentacion'],
+                        criterios_utilizados=criterio_ia.criterios_evaluacion,
+                        confirmada_por_docente=True,
+                        fecha_confirmacion=timezone.now()
+                    )
+                    
+                    # Asignar calificación al envío
+                    envio.calificacion = resultado_ia['calificacion']
+                    envio.save()
+                    
+                    messages.success(request, "Calificación con IA aplicada correctamente.")
+                    return redirect('envios_por_calificar_ia', codigo_acceso=codigo_acceso, id_actividad=actividad.id)
+                    
+                except Exception as e:
+                    messages.error(request, f"Error al calificar con IA: {str(e)}")
+            
+            elif accion == 'revisar':
+                # Redirigir a calificación manual
+                return redirect('calificar_entrega', codigo_acceso=codigo_acceso, id_envio=envio.id)
+    else:
+        form = ConfirmarCalificacionIAForm()
+        
+        try:
+            # Extraer el contenido del código
+            contenido_codigo = extraer_texto_codigo(envio.archivo.path)
+            
+            # Generar calificación con IA (solo para mostrar)
+            resultado_ia = generar_calificacion_con_ia(
+                contenido_codigo,
+                criterio_ia.lenguaje_programacion,
+                criterio_ia.criterios_evaluacion,
+                criterio_ia.puntaje_maximo,
+                criterio_ia.instrucciones_adicionales
+            )
+            
+            calificacion_ia = resultado_ia['calificacion']
+            retroalimentacion_ia = resultado_ia['retroalimentacion']
+            
+        except Exception as e:
+            calificacion_ia = None
+            retroalimentacion_ia = f"Error al generar calificación: {str(e)}"
+    
+    return render(request, 'calificar_ia/calificar_envio_ia.html', {
+        'curso': curso,
+        'actividad': actividad,
+        'envio': envio,
+        'form': form,
+        'calificacion_ia': calificacion_ia,
+        'retroalimentacion_ia': retroalimentacion_ia
+    })
+
+@login_required
+@docente_curso_requerido
+def calificar_todos_ia(request, codigo_acceso, id_actividad):
+    """Vista para calificar todos los envíos de una actividad con IA"""
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso, generado_por_ia=True)
+    
+    # Verificar si tiene criterios de IA configurados
+    if not hasattr(actividad, 'criterio_ia'):
+        messages.warning(request, "Esta actividad no tiene criterios de calificación por IA configurados.")
+        return redirect('configurar_criterios_ia', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+    
+    # Obtener envíos pendientes de calificar
+    envios = Envio.objects.filter(
+        actividad=actividad,
+        calificacion__isnull=True,
+        calificacion_ia__isnull=True
+    )
+    
+    cantidad_envios = envios.count()
+    
+    if cantidad_envios == 0:
+        messages.info(request, "No hay envíos pendientes para calificar.")
+        return redirect('envios_por_calificar_ia', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+    
+    if request.method == 'POST':
+        criterio_ia = actividad.criterio_ia
+        calificaciones_exitosas = 0
+        calificaciones_fallidas = 0
+        
+        for envio in envios:
+            try:
+                # Extraer el contenido del código
+                contenido_codigo = extraer_texto_codigo(envio.archivo.path)
+                
+                # Generar calificación con IA
+                resultado_ia = generar_calificacion_con_ia(
+                    contenido_codigo,
+                    criterio_ia.lenguaje_programacion,
+                    criterio_ia.criterios_evaluacion,
+                    criterio_ia.puntaje_maximo,
+                    criterio_ia.instrucciones_adicionales
+                )
+                
+                # Guardar calificación de IA
+                calificacion_ia = CalificacionIA.objects.create(
+                    envio=envio,
+                    calificacion_sugerida=resultado_ia['calificacion'],
+                    retroalimentacion_ia=resultado_ia['retroalimentacion'],
+                    criterios_utilizados=criterio_ia.criterios_evaluacion,
+                    confirmada_por_docente=True,
+                    fecha_confirmacion=timezone.now()
+                )
+                
+                # Asignar calificación al envío
+                envio.calificacion = resultado_ia['calificacion']
+                envio.save()
+                
+                calificaciones_exitosas += 1
+                
+            except Exception as e:
+                calificaciones_fallidas += 1
+                print(f"Error al calificar envío {envio.id}: {str(e)}")
+        
+        if calificaciones_exitosas > 0:
+            messages.success(
+                request, 
+                f"Se calificaron {calificaciones_exitosas} envíos con IA correctamente."
+            )
+        
+        if calificaciones_fallidas > 0:
+            messages.warning(
+                request, 
+                f"{calificaciones_fallidas} envíos no pudieron ser calificados."
+            )
+        
+        return redirect('envios_por_calificar_ia', codigo_acceso=codigo_acceso, id_actividad=id_actividad)
+    
+    return render(request, 'calificar_ia/confirmar_calificar_todos.html', {
+        'curso': curso,
+        'actividad': actividad,
+        'cantidad_envios': cantidad_envios
+    })
+
+@login_required
+@docente_curso_requerido
+def calificar_actividades_ia(request, codigo_acceso):
+    """Vista principal para mostrar todas las actividades que pueden ser calificadas con IA"""
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    
+    # Obtener TODAS las actividades entregables del curso
+    actividades = Actividad.objects.filter(
+        curso=curso,
+        entregable=True
+    ).order_by('-fecha')
+    
+    actividades_con_datos = []
+    for actividad in actividades:
+        # Contar envíos totales
+        total_envios = Envio.objects.filter(actividad=actividad).count()
+        
+        # Contar envíos pendientes de calificar
+        envios_pendientes = Envio.objects.filter(
+            actividad=actividad,
+            calificacion__isnull=True
+        ).count()
+        
+        # Contar envíos ya calificados
+        envios_calificados = Envio.objects.filter(
+            actividad=actividad,
+            calificacion__isnull=False
+        ).count()
+        
+        # Contar calificaciones de IA pendientes de revisar
+        calificaciones_pendientes = CalificacionIA.objects.filter(
+            envio__actividad=actividad,
+            confirmada_por_docente=False
+        ).count()
+        
+        # Verificar si tiene criterios de IA configurados
+        tiene_criterios = hasattr(actividad, 'criterio_ia')
+        
+        # Determinar si es calificable por IA
+        es_calificable_ia = actividad.generado_por_ia or tiene_criterios
+        
+        actividades_con_datos.append({
+            'actividad': actividad,
+            'total_envios': total_envios,
+            'envios_pendientes': envios_pendientes,
+            'envios_calificados': envios_calificados,
+            'calificaciones_pendientes': calificaciones_pendientes,
+            'tiene_criterios': tiene_criterios,
+            'es_calificable_ia': es_calificable_ia,
+            'puede_configurar_ia': not es_calificable_ia,  # Puede configurar IA si no está configurada
+        })
+    
+    return render(request, 'lista_actividades_ia.html', {
+        'curso': curso,
+        'actividades_con_datos': actividades_con_datos
+    })
+
+@login_required
+@docente_curso_requerido
+def revisar_calificaciones_ia(request, codigo_acceso, id_actividad):
+    """Vista para revisar calificaciones generadas por IA"""
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso)
+
+    # Obtener calificaciones de IA pendientes de revisar
+    calificaciones_ia = CalificacionIA.objects.filter(
+        envio__actividad=actividad,
+        confirmada_por_docente=False
+    ).select_related('envio__alumno')
+
+    # Convertir retroalimentación IA (JSON o texto) en formato HTML legible
+    for calificacion in calificaciones_ia:
+        retro = calificacion.retroalimentacion_ia
+        try:
+            data = json.loads(retro)
+            texto = format_html("<br>".join(
+                f"<strong>{k}:</strong> {v}" for k, v in data.items()
+            ))
+            calificacion.retroalimentacion_ia = texto
+        except json.JSONDecodeError:
+            # Si no es JSON válido, mostrar el texto como está
+            calificacion.retroalimentacion_ia = retro
+
+    return render(request, 'revisar_calificaciones_ia.html', {
+        'curso': curso,
+        'actividad': actividad,
+        'calificaciones_ia': calificaciones_ia
+    })
+
+@login_required
+@docente_curso_requerido
+def confirmar_calificacion_individual(request, codigo_acceso, id_calificacion_ia):
+    """Vista para confirmar una calificación individual de IA"""
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    calificacion_ia = get_object_or_404(
+        CalificacionIA, 
+        id=id_calificacion_ia,
+        envio__curso=curso,
+        confirmada_por_docente=False
+    )
+    
+    if request.method == 'POST':
+        form = ConfirmarCalificacionIAForm(request.POST)
+        if form.is_valid():
+            accion = form.cleaned_data['accion']
+            calificacion_ajustada = form.cleaned_data.get('calificacion_ajustada')
+            comentarios_docente = form.cleaned_data.get('comentarios_docente', '')
+            
+            if accion == 'confirmar':
+                # Confirmar la calificación de IA
+                calificacion_final = calificacion_ajustada if calificacion_ajustada else calificacion_ia.calificacion_sugerida
+                
+                # Actualizar el envío con la calificación final
+                envio = calificacion_ia.envio
+                envio.calificacion = calificacion_final
+                envio.save()
+                
+                # Marcar como confirmada
+                calificacion_ia.confirmada_por_docente = True
+                calificacion_ia.fecha_confirmacion = timezone.now()
+                calificacion_ia.save()
+                
+                # Si hay comentarios del docente, agregarlos
+                if comentarios_docente:
+                    calificacion_ia.retroalimentacion_ia += f"\n\nComentarios del docente:\n{comentarios_docente}"
+                    calificacion_ia.save()
+                
+                messages.success(request, "Calificación confirmada correctamente.")
+                
+            elif accion == 'revisar':
+                # Redirigir a calificación manual
+                return redirect('calificar_entrega', 
+                              codigo_acceso=codigo_acceso, 
+                              id_envio=calificacion_ia.envio.id)
+            
+            return redirect('revisar_calificaciones_ia', 
+                          codigo_acceso=codigo_acceso, 
+                          id_actividad=calificacion_ia.envio.actividad.id)
+    else:
+        form = ConfirmarCalificacionIAForm()
+    
+    return render(request, 'confirmar_calificacion_individual.html', {
+        'curso': curso,
+        'calificacion_ia': calificacion_ia,
+        'form': form
+    })
+
+@login_required
+@docente_curso_requerido
+def configurar_criterios_ia(request, codigo_acceso, id_actividad):
+    """Vista para configurar criterios de calificación por IA"""
+    curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+    actividad = get_object_or_404(Actividad, id=id_actividad, curso=curso)
+    
+    # Verificar si ya existen criterios
+    criterio_ia = getattr(actividad, 'criterio_ia', None)
+    
+    if request.method == 'POST':
+        if criterio_ia:
+            form = CriterioCalificacionIAForm(request.POST, instance=criterio_ia)
+        else:
+            form = CriterioCalificacionIAForm(request.POST)
+        
+        if form.is_valid():
+            criterio = form.save(commit=False)
+            criterio.actividad = actividad
+            criterio.save()
+            
+            # Marcar la actividad como generada por IA si no lo está
+            if not actividad.generado_por_ia:
+                actividad.generado_por_ia = True
+                actividad.save()
+            
+            messages.success(request, "Criterios de calificación por IA configurados correctamente.")
+            return redirect('calificar_actividades_ia', codigo_acceso=codigo_acceso)
+    else:
+        if criterio_ia:
+            form = CriterioCalificacionIAForm(instance=criterio_ia)
+        else:
+            form = CriterioCalificacionIAForm()
+    
+    return render(request, 'configurar_criterios_ia.html', {
+        'curso': curso,
+        'actividad': actividad,
+        'form': form,
+        'editando': criterio_ia is not None
     })

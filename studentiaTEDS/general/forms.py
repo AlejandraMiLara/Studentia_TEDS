@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from .models import UsuarioPersonalizado, Curso, Reporte, Actividad, Examen, Pregunta, Opcion, Envio
+from .models import UsuarioPersonalizado, Curso, Reporte, Actividad, Examen, Pregunta, Opcion, Envio, ReporteRendimiento, CriterioCalificacionIA
 from django.forms import modelformset_factory, inlineformset_factory
 from django.forms.models import inlineformset_factory
 from django.utils.timezone import localtime
@@ -178,3 +178,123 @@ class CalificacionForm(forms.ModelForm):
         widgets = {
             'calificacion': forms.NumberInput(attrs={'min': 0, 'max': 100}),
         }
+
+#Cuarto Sprint
+class FormularioReporteRendimiento(forms.ModelForm):
+    class Meta:
+        model = ReporteRendimiento
+        fields = ['titulo', 'curso', 'fecha_inicio', 'fecha_fin']
+        labels = {
+            'titulo': 'Título del Reporte',
+            'curso': 'Curso',
+            'fecha_inicio': 'Fecha de Inicio',
+            'fecha_fin': 'Fecha de Fin',
+        }
+        
+        
+        widgets = {
+            'fecha_inicio': forms.DateInput(attrs={
+                'type': 'date', 
+                'class': 'form-control',
+                'placeholder': 'Seleccione fecha de inicio'
+            }),
+            'fecha_fin': forms.DateInput(attrs={
+                'type': 'date', 
+                'class': 'form-control',
+                'placeholder': 'Seleccione fecha de fin'
+            }),
+            'titulo': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Ej: Reporte Primer Trimestre'
+            }),
+            'curso': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+        }
+        
+    def __init__(self, usuario, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Solo mostrar cursos del docente actual
+        self.fields['curso'].queryset = Curso.objects.filter(id_profesor=usuario)
+        
+    def clean(self):
+        datos_limpios = super().clean()
+        fecha_inicio = datos_limpios.get('fecha_inicio')
+        fecha_fin = datos_limpios.get('fecha_fin')
+        
+        if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
+            raise forms.ValidationError("La fecha de inicio debe ser anterior a la fecha de fin")
+        
+        return datos_limpios
+
+
+class CriterioCalificacionIAForm(forms.ModelForm):
+    class Meta:
+        model = CriterioCalificacionIA
+        fields = ['lenguaje_programacion', 'criterios_evaluacion', 'puntaje_maximo', 'instrucciones_adicionales']
+        widgets = {
+            'lenguaje_programacion': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ej: Python, Java, JavaScript, C++, etc.'
+            }),
+            'criterios_evaluacion': forms.Textarea(attrs={
+                'rows': 4,
+                'class': 'form-control',
+                'placeholder': 'Ej: Funcionalidad (40%), Eficiencia (20%), Estilo de código (20%), Documentación (20%)'
+            }),
+            'puntaje_maximo': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': 1,
+                'max': 100,
+                'step': 0.01
+            }),
+            'instrucciones_adicionales': forms.Textarea(attrs={
+                'rows': 3,
+                'class': 'form-control',
+                'placeholder': 'Instrucciones adicionales para la IA sobre cómo evaluar el código...'
+            })
+        }
+        labels = {
+            'lenguaje_programacion': 'Lenguaje de Programación',
+            'criterios_evaluacion': 'Criterios de Evaluación',
+            'puntaje_maximo': 'Puntaje Máximo',
+            'instrucciones_adicionales': 'Instrucciones Adicionales'
+        }
+
+class ConfirmarCalificacionIAForm(forms.Form):
+    """Formulario para confirmar o rechazar calificación de IA"""
+    OPCIONES = [
+        ('confirmar', 'Confirmar Calificación'),
+        ('revisar', 'Revisar Manualmente')
+    ]
+    
+    accion = forms.ChoiceField(
+        choices=OPCIONES,
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        label="¿Qué deseas hacer con esta calificación?"
+    )
+    
+    calificacion_ajustada = forms.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        required=False,
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 0,
+            'max': 100,
+            'step': 0.01
+        }),
+        label="Calificación Ajustada (opcional)"
+    )
+    
+    comentarios_docente = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'rows': 3,
+            'class': 'form-control',
+            'placeholder': 'Comentarios adicionales sobre el código...'
+        }),
+        required=False,
+        label="Comentarios del Docente"
+    )
+
+

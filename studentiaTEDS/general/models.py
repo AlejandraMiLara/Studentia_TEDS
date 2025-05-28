@@ -223,3 +223,118 @@ class RetroalimentacionIA(models.Model):
 
     def __str__(self):
         return f"Retroalimentación - {self.usuario} / {self.examen} / Estado: {'✅' if self.estado else '❌'}"
+
+#Cuarto Sprint
+class ReporteRendimiento(models.Model):
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='reportes_rendimiento')  # Corregido: sin espacios
+    docente = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reportes_creados')
+    titulo = models.CharField(max_length=200)
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-fecha_creacion']  
+        verbose_name = 'Reporte de Rendimiento'
+        verbose_name_plural = 'Reportes de Rendimiento'
+    
+    # Métodos movidos fuera de la clase Meta
+    def __str__(self):
+        return f"{self.titulo} - {self.curso.nombre_curso}"
+    
+    def obtener_promedios_estudiantes(self):
+        """Calcula el promedio de cada estudiante en el rango de fechas"""
+        from django.db.models import Avg, Sum, Count
+        import datetime
+        
+        datos_estudiantes = []
+        alumnos_curso = AlumnoCurso.objects.filter(curso=self.curso)
+        from django.utils import timezone
+        for alumno_curso in alumnos_curso:
+            estudiante = alumno_curso.alumno
+
+            # Asegurar que las fechas sean timezone-aware
+            fecha_inicio_dt = timezone.make_aware(
+                datetime.datetime.combine(self.fecha_inicio, datetime.time.min)
+            ) if timezone.is_naive(datetime.datetime.combine(self.fecha_inicio, datetime.time.min)) else datetime.datetime.combine(self.fecha_inicio, datetime.time.min)
+            fecha_fin_dt = timezone.make_aware(
+                datetime.datetime.combine(self.fecha_fin, datetime.time.max)
+            ) if timezone.is_naive(datetime.datetime.combine(self.fecha_fin, datetime.time.max)) else datetime.datetime.combine(self.fecha_fin, datetime.time.max)
+
+            # Calcular promedio de calificaciones de envios
+            promedio_envios = Envio.objects.filter(
+                alumno=estudiante, 
+                curso=self.curso, 
+                fecha__range=[fecha_inicio_dt, fecha_fin_dt], 
+                calificacion__isnull=False
+            ).aggregate(promedio=Avg('calificacion'))['promedio']
+            
+            # Calcular promedio de respuestas de examenes
+            respuestas_examenes = Respuesta.objects.filter(
+                estudiante=estudiante,
+                examen__curso=self.curso,
+                examen__fecha_inicio__range=[self.fecha_inicio, self.fecha_fin],
+                puntaje__isnull=False
+            ).aggregate(
+                total_puntaje=Sum('puntaje'), 
+                total_respuestas=Count('id')
+            )
+            
+            promedio_examenes = None
+            if respuestas_examenes['total_respuestas'] and respuestas_examenes['total_puntaje']:
+                promedio_examenes = respuestas_examenes['total_puntaje'] / respuestas_examenes['total_respuestas']
+                
+            
+            promedio_final = None
+            if promedio_envios is not None and promedio_examenes is not None:
+                promedio_final = (float(promedio_envios) + float(promedio_examenes)) / 2
+            elif promedio_envios is not None:
+                promedio_final = promedio_envios
+            elif promedio_examenes is not None:
+                promedio_final = promedio_examenes
+                
+            if promedio_final is not None:
+                datos_estudiantes.append({
+                    'estudiante': estudiante, 
+                    'promedio': round(promedio_final, 2), 
+                    'promedio_envios': round(promedio_envios, 2) if promedio_envios else None, 
+                    'promedio_examenes': round(promedio_examenes, 2) if promedio_examenes else None, 
+                })
+        
+        return datos_estudiantes          
+        return datos_estudiantes          
+            
+class CriterioCalificacionIA(models.Model):
+    """Criterios para calificación automática de código por IA"""
+    actividad = models.OneToOneField(Actividad, on_delete=models.CASCADE, related_name='criterio_ia')
+    lenguaje_programacion = models.CharField(
+        max_length=50,
+        help_text="Lenguaje de programación a evaluar (ej: Python, Java, JavaScript)"
+    )
+    criterios_evaluacion = models.TextField(
+        help_text="Describe los criterios que la IA debe usar para calificar el código (ej: funcionalidad, eficiencia, estilo)"
+    )
+    puntaje_maximo = models.DecimalField(max_digits=5, decimal_places=2, default=100.00)
+    instrucciones_adicionales = models.TextField(
+        blank=True, 
+        help_text="Instrucciones específicas para la IA sobre cómo evaluar el código"
+    )
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Criterios IA - {self.actividad.titulo} ({self.lenguaje_programacion})"
+
+class CalificacionIA(models.Model):
+    """Registro de calificaciones de código realizadas por IA"""
+    envio = models.OneToOneField(Envio, on_delete=models.CASCADE, related_name='calificacion_ia')
+    calificacion_sugerida = models.DecimalField(max_digits=5, decimal_places=2)
+    retroalimentacion_ia = models.TextField()
+    criterios_utilizados = models.TextField()
+    fecha_calificacion = models.DateTimeField(auto_now_add=True)
+    confirmada_por_docente = models.BooleanField(default=False)
+    fecha_confirmacion = models.DateTimeField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Calificación IA - {self.envio.actividad.titulo} - {self.envio.alumno.username}"
+
+

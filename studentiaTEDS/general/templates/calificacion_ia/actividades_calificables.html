@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'board' codigo_acceso=curso.codigo_acceso %}">{{ curso.nombre_curso }}</a></li>
+            <li class="breadcrumb-item active">Calificar con IA</li>
+        </ol>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Actividades calificables por IA</h4>
+        </div>
+        <div class="card-body">
+            {% if actividades_con_envios %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Actividad</th>
+                                <th>Fecha de creación</th>
+                                <th>Envíos pendientes</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in actividades_con_envios %}
+                                <tr>
+                                    <td>{{ item.actividad.titulo }}</td>
+                                    <td>{{ item.actividad.fecha|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ item.envios_pendientes }}</td>
+                                    <td>
+                                        <a href="{% url 'envios_por_calificar_ia' codigo_acceso=curso.codigo_acceso id_actividad=item.actividad.id %}" class="btn btn-sm btn-outline-primary">
+                                            Ver envíos
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    No hay actividades calificables por IA con envíos pendientes.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

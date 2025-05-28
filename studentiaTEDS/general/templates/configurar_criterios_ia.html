@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Configurar Criterios IA - {{ actividad.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Configurar Criterios de Calificación de Código</h2>
+                <a href="{% url 'calificar_actividades_ia' curso.codigo_acceso %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ actividad.titulo }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-code"></i>
+                        <strong>Instrucciones:</strong> 
+                        Define los criterios que la IA utilizará para evaluar el código de los estudiantes.
+                        Esta herramienta está diseñada específicamente para evaluar código de programación.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="{{ form.lenguaje_programacion.id_for_label }}" class="form-label">{{ form.lenguaje_programacion.label }}</label>
+                            {{ form.lenguaje_programacion }}
+                            <div class="form-text">
+                                Especifica el lenguaje de programación que se evaluará (Python, Java, JavaScript, etc.)
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.criterios_evaluacion.id_for_label }}" class="form-label">{{ form.criterios_evaluacion.label }}</label>
+                            {{ form.criterios_evaluacion }}
+                            <div class="form-text">
+                                Describe detalladamente qué aspectos del código debe evaluar la IA y su peso relativo.
+                                Por ejemplo: funcionalidad, eficiencia, estilo, documentación, etc.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.puntaje_maximo.id_for_label }}" class="form-label">{{ form.puntaje_maximo.label }}</label>
+                            {{ form.puntaje_maximo }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.instrucciones_adicionales.id_for_label }}" class="form-label">{{ form.instrucciones_adicionales.label }}</label>
+                            {{ form.instrucciones_adicionales }}
+                            <div class="form-text">
+                                Instrucciones específicas adicionales para la IA sobre cómo evaluar el código (opcional).
+                            </div>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Guardar Criterios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

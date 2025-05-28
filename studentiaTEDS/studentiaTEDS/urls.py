@@ -66,6 +66,23 @@ urlpatterns = [
 
     path('examen/<slug:slug>/calificar-ia/<int:estudiante_id>/', views.calificar_examen_IA, name='calificar_respuestas_IA'),
     path('retroalimentacion/ia/<int:examen_id>/', views.retroalimentacion_ia_estudiante, name='retroalimentacion_ia_estudiante'),
+    
+    path('reportes/crear/', views.crear_reporte_rendimiento, name='crear_reporte_rendimiento'),
+    path('reportes/curso/<str:codigo_acceso>/', views.reportes_curso, name='reportes_curso'),
+    path('reportes/detalle/<int:id_reporte>/', views.detalle_reporte, name='detalle_reporte'),
+    path('reportes/eliminar/<int:id_reporte>/', views.eliminar_reporte, name='eliminar_reporte'),
+    path('reportes/descargar/<int:id_reporte>/', views.descargar_pdf_reporte, name='descargar_pdf_reporte'),
+    path('board/<str:codigo_acceso>/calificar-ia/', views.calificar_actividades_ia, name='calificar_actividades_ia'),
+    path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/procesar-ia/', views.procesar_calificacion_ia, name='procesar_calificacion_ia'),
+    path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/revisar-ia/', views.revisar_calificaciones_ia, name='revisar_calificaciones_ia'),
+    path('board/<str:codigo_acceso>/<int:id_calificacion_ia>/confirmar/', views.confirmar_calificacion_individual, name='confirmar_calificacion_individual'),
+    path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/criterios-ia/', views.configurar_criterios_ia, name='configurar_criterios_ia'),
+    
+    # Agregar estas URLs en urls.py
+    path('board/<str:codigo_acceso>/calificar-ia/', views.actividades_calificables_ia, name='actividades_calificables_ia'),
+    path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/envios-ia/', views.envios_por_calificar_ia, name='envios_por_calificar_ia'),
+    path('board/<str:codigo_acceso>/envio/<int:id_envio>/calificar-ia/', views.calificar_envio_ia, name='calificar_envio_ia'),
+    path('board/<str:codigo_acceso>/actividad/<int:id_actividad>/calificar-todos-ia/', views.calificar_todos_ia, name='calificar_todos_ia'),
 
 ]
 

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Procesar Calificación IA - {{ actividad.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Calificar Código con IA: {{ actividad.titulo }}</h2>
+                <a href="{% url 'calificar_actividades_ia' curso.codigo_acceso %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Entregas de Código Pendientes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Actividad:</strong> {{ actividad.titulo }}</p>
+                            <p><strong>Entregas a procesar:</strong> {{ entregas_pendientes.count }}</p>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Importante:</strong> 
+                                La IA procesará todas las entregas pendientes según los criterios configurados. 
+                                Esta herramienta está diseñada específicamente para evaluar código de programación.
+                                Podrás revisar y ajustar las calificaciones antes de confirmarlas.
+                            </div>
+
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="text-center">
+                                    <button type="submit" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-code"></i> Procesar Código con IA
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">Criterios de Calificación</h6>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Lenguaje:</strong> {{ criterio_ia.lenguaje_programacion }}</p>
+                            <p><strong>Puntaje Máximo:</strong> {{ criterio_ia.puntaje_maximo }}</p>
+                            <p><strong>Criterios:</strong></p>
+                            <div class="small">{{ criterio_ia.criterios_evaluacion|linebreaks }}</div>
+                            
+                            {% if criterio_ia.instrucciones_adicionales %}
+                            <p><strong>Instrucciones Adicionales:</strong></p>
+                            <div class="small">{{ criterio_ia.instrucciones_adicionales|linebreaks }}</div>
+                            {% endif %}
+
+                            <a href="{% url 'configurar_criterios_ia' curso.codigo_acceso actividad.id %}" 
+                               class="btn btn-outline-secondary btn-sm mt-2">
+                                <i class="fas fa-edit"></i> Editar Criterios
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

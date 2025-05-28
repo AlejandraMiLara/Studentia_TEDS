@@ -155,6 +155,22 @@
             color: white;
             font-size: 1rem;
         }
+
+        .custom-button--report {
+            background-color: #4CAF50 !important; /* Verde para reportes */
+            color: #FFFFFF !important;
+        }
+        .custom-button--report:hover {
+            background-color: #45a049 !important;
+        }
+        
+        .custom-button--ai {
+            background-color: #6366f1 !important; /* Azul índigo para IA */
+            color: #FFFFFF !important;
+        }
+        .custom-button--ai:hover {
+            background-color: #4f46e5 !important;
+        }
     </style>
 {% endblock %}
 
@@ -174,6 +190,13 @@
                     <a href="{% url 'crear_examen' curso.codigo_acceso %}" class="custom-button">Crear Examen</a>
                     <a href="{% url 'examenes_por_calificar' curso.codigo_acceso %}" class="custom-button">Calificar Exámenes</a>
                     <a href="{% url 'lista_retroalimentacion' curso.codigo_acceso %}" class="custom-button">Ver Retroalimentaciónes</a>
+                    <a href="{% url 'reportes_curso' curso.codigo_acceso %}" class="custom-button custom-button--report">
+                        <i class="fas fa-chart-bar"></i> Reportes de Rendimiento
+                    </a>
+                    <a href="{% url 'calificar_actividades_ia' curso.codigo_acceso %}" class="custom-button custom-button--ai">
+                        <i class="fas fa-code"></i> Calificar Atividades con IA
+                    </a>
+                    
 
                 {% else %}
                     <h3 class="custom-subtitle">Acciones Rápidas</h3>

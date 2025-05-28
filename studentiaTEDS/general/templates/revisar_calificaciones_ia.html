@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Revisar Calificaciones IA - {{ actividad.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Revisar Calificaciones de Código</h2>
+                <a href="{% url 'calificar_actividades_ia' curso.codigo_acceso %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ actividad.titulo }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if calificaciones_ia %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-code"></i>
+                            <strong>Instrucciones:</strong> 
+                            Revisa cada calificación de código generada por IA y decide si confirmarla o revisarla manualmente.
+                        </div>
+
+                        {% for calificacion in calificaciones_ia %}
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <div class="row align-items-center">
+                                    <div class="col-md-6">
+                                        <strong>{{ calificacion.envio.alumno.username }}</strong>
+                                        <small class="text-muted">- {{ calificacion.envio.alumno.email }}</small>
+                                    </div>
+                                    <div class="col-md-3 text-center">
+                                        <span class="badge bg-primary fs-6">
+                                            {{ calificacion.calificacion_sugerida }}/100
+                                        </span>
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <a href="{% url 'confirmar_calificacion_individual' curso.codigo_acceso calificacion.id %}" 
+                                           class="btn btn-success btn-sm">
+                                            <i class="fas fa-check"></i> Revisar
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Retroalimentación de IA:</h6>
+                                        <div class="small">{{ calificacion.retroalimentacion_ia|safe }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Archivo de Código:</h6>
+                                        <a href="{{ calificacion.envio.archivo.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-file-code"></i> Ver Código
+                                        </a>
+                                        <small class="d-block mt-1 text-muted">
+                                            Entregado: {{ calificacion.envio.fecha|date:"d/m/Y H:i" }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="alert alert-info text-center">
+                            <i class="fas fa-info-circle fa-3x mb-3"></i>
+                            <h5>No hay calificaciones pendientes</h5>
+                            <p>Todas las calificaciones de código por IA han sido procesadas.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
