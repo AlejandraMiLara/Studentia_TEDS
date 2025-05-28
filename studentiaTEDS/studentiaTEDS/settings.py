@@ -22,7 +22,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'studentiateds@gmail.com'
 EMAIL_HOST_PASSWORD = 'nrnalqqolmzsncte'
 DEFAULT_FROM_EMAIL = 'Studentia'
-
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', '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')
 
 AUTH_USER_MODEL = 'general.UsuarioPersonalizado'
 

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import datetime 
 from django.contrib.auth import authenticate, login, logout, get_backends, get_user_model
 from django.contrib.auth.decorators import login_required
@@ -20,6 +20,15 @@ from django.urls import reverse
 from django.contrib.messages import get_messages
 from django.core.exceptions import PermissionDenied
 from .decorators import verificar_acceso_curso
+
+from django.conf import settings
+import openai
+from openai import OpenAI
+from django.views.decorators.csrf import csrf_exempt
+
+
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
+
 
 User = get_user_model()
 
@@ -1216,3 +1225,29 @@ def calificar_entrega(request, codigo_acceso, id_envio):
         'form': form,
         'envio': envio
     })
+
+
+# ultimo esfuerzo compañeros
+
+def chatgpt_form(request):
+    return render(request, 'chatgpt_form.html') 
+
+@csrf_exempt
+def chatgpt_prompt(request):
+    if request.method == "POST":
+        prompt = request.POST.get("prompt", "")
+
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "Eres un asistente útil."},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            reply = response.choices[0].message.content
+            return JsonResponse({"response": reply})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
