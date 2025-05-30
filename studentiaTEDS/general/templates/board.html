@@ -105,7 +105,7 @@
             color: #4A4A4A !important;
             font-size: 1.1rem !important;
             font-family: 'Poppins', sans-serif;
-            margin-bottom: 20px;
+            margin-bottom: 20Vulnerability: none;
         }
         .custom-button {
             background-color: #1A3C5A !important;
@@ -171,6 +171,35 @@
         .custom-button--ai:hover {
             background-color: #4f46e5 !important;
         }
+
+        /* Estilo para el dropdown */
+        .custom-dropdown {
+            background-color: #1A3C5A !important;
+            border: none !important;
+            padding: 12px 20px !important;
+            font-size: 1.2rem !important;
+            border-radius: 25px !important;
+            color: #FFFFFF !important;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            appearance: none; /* Quitar el estilo por defecto del navegador */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 20px;
+            width: 300px; /* Ajustar ancho según sea necesario */
+            cursor: pointer;
+        }
+        .custom-dropdown option {
+            background-color: #FFFFFF !important;
+            color: #1A3C5A !important;
+            font-family: 'Poppins', sans-serif;
+        }
+        .custom-dropdown:hover {
+            background-color: #FF5733 !important;
+        }
     </style>
 {% endblock %}
 
@@ -185,24 +214,24 @@
 
                 {% if request.user == curso.id_profesor %}
                     <h3 class="custom-subtitle">Acciones Rápidas</h3>
-                    <a href="{% url 'board_add_content' curso.codigo_acceso %}" class="custom-button">Agregar Contenido</a>
-                    <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="custom-button">Ver alumnos inscritos</a>
-                    <a href="{% url 'crear_examen' curso.codigo_acceso %}" class="custom-button">Crear Examen</a>
-                    <a href="{% url 'crear_examen_ia' curso.codigo_acceso %}" class="custom-button">Crear Examen con IA</a>
-                    <a href="{% url 'examenes_por_calificar' curso.codigo_acceso %}" class="custom-button">Calificar Exámenes</a>
-                    <a href="{% url 'lista_retroalimentacion' curso.codigo_acceso %}" class="custom-button">Ver Retroalimentaciónes</a>
-                    <a href="{% url 'reportes_curso' curso.codigo_acceso %}" class="custom-button custom-button--report">
-                        <i class="fas fa-chart-bar"></i> Reportes de Rendimiento
-                    </a>
-                    <a href="{% url 'calificar_actividades_ia' curso.codigo_acceso %}" class="custom-button custom-button--ai">
-                        <i class="fas fa-code"></i> Calificar Atividades con IA
-                    </a>
-                    
-
+                    <select class="custom-dropdown" onchange="if (this.value) window.location.href=this.value;">
+                        <option value="" disabled selected>Selecciona una acción</option>
+                        <option value="{% url 'board_add_content' curso.codigo_acceso %}">Agregar Contenido</option>
+                        <option value="{% url 'board_view_students' curso.codigo_acceso %}">Ver alumnos inscritos</option>
+                        <option value="{% url 'crear_examen' curso.codigo_acceso %}">Crear Examen</option>
+                        <option value="{% url 'crear_examen_ia' curso.codigo_acceso %}">Crear Examen con IA</option>
+                        <option value="{% url 'examenes_por_calificar' curso.codigo_acceso %}">Calificar Exámenes</option>
+                        <option value="{% url 'lista_retroalimentacion' curso.codigo_acceso %}">Ver Retroalimentaciónes</option>
+                        <option value="{% url 'reportes_curso' curso.codigo_acceso %}">Reportes de Rendimiento</option>
+                        <option value="{% url 'calificar_actividades_ia' curso.codigo_acceso %}">Calificar Actividades con IA</option>
+                    </select>
                 {% else %}
                     <h3 class="custom-subtitle">Acciones Rápidas</h3>
-                    <a href="{% url 'board_view_students' curso.codigo_acceso %}" class="custom-button">Ver alumnos inscritos</a>
-                    <a href="{% url 'lista_retroalimentacion' curso.codigo_acceso %}" class="custom-button">Ver Retroalimentaciónes</a>
+                    <select class="custom-dropdown" onchange="if (this.value) window.location.href=this.value;">
+                        <option value="" disabled selected>Selecciona una acción</option>
+                        <option value="{% url 'board_view_students' curso.codigo_acceso %}">Ver alumnos inscritos</option>
+                        <option value="{% url 'lista_retroalimentacion' curso.codigo_acceso %}">Ver Retroalimentaciónes</option>
+                    </select>
                 {% endif %}
                 <h3 class="custom-subtitle">Lista de Examenes</h3>
                 {% if examenes %}
@@ -286,7 +315,6 @@
                     <p class="empty-message">No hay actividades aún.</p>
                 {% endif %}
                  <a href="{% url 'dashboard' %}" class="custom-button mt-3">Volver a Dashboard</a>
-
             </div>
         </div>
     </div>
