@@ -85,13 +85,14 @@
       <div class="custom-section">
         <h2 class="custom-title">Crear un nuevo curso</h2>
 
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li class="{{ message.tags|default:'info' }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+<ul class="messages">
+    {% for message in messages %}
+        <li class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}">
+            {{ message }}
+        </li>
+    {% endfor %}
+</ul>
+
 
         <form method="post" class="custom-form">
             {% csrf_token %}
