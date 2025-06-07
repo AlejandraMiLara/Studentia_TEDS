@@ -5,6 +5,21 @@ from .models import Curso, AlumnoCurso,Examen
 from django.contrib import messages
 
 
+def verificar_alumno_inscrito(view_func):
+    @wraps(view_func)
+    def wrapper(request, codigo_acceso, *args, **kwargs):
+        curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
+
+        # Verificar si el usuario está inscrito como alumno
+        if request.user != curso.id_profesor and not AlumnoCurso.objects.filter(curso=curso, alumno=request.user).exists():
+            raise PermissionDenied("Solo los alumnos inscritos pueden acceder a esta vista.")
+
+        # Inyectar el curso en kwargs si lo quieres usar en la vista
+        #kwargs['curso'] = curso
+        return view_func(request, codigo_acceso, *args, **kwargs)
+    return wrapper
+
+
 def verificar_acceso_curso(view_func):
     @wraps(view_func)
     def wrapper(request, codigo_acceso, *args, **kwargs):
@@ -17,6 +32,8 @@ def verificar_acceso_curso(view_func):
         kwargs['curso'] = curso
         return view_func(request, codigo_acceso, *args, **kwargs)
     return wrapper
+
+
 def verificar_acceso_examen(view_func):
     def _wrapped_view(request, slug, *args, **kwargs):
         examen = get_object_or_404(Examen, slug=slug)

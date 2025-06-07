@@ -20,7 +20,7 @@ from django.db import models
 from django.urls import reverse
 from django.contrib.messages import get_messages
 from django.core.exceptions import PermissionDenied
-from .decorators import verificar_acceso_curso, docente_curso_requerido, docente_requerido
+from .decorators import verificar_acceso_curso, docente_curso_requerido, docente_requerido, verificar_alumno_inscrito
 
 from django.conf import settings
 import openai
@@ -397,6 +397,7 @@ def content_delete(request, codigo_acceso, id_actividad):
         'actividad': actividad
     })
 
+@verificar_alumno_inscrito
 @login_required
 def content_detail(request, codigo_acceso, id_actividad):
     curso = get_object_or_404(Curso, codigo_acceso=codigo_acceso)
