@@ -117,18 +117,8 @@
 <div class="container">
     <div class="custom-section">
 
-        
-        {% if messages %}
-            {% for mensaje in messages %}
-                <div class="alert alert-{{ mensaje.tags }} alert-dismissible fade show" role="alert">
-                    {{ mensaje }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
-
         <h2 class="titulo-reporte mb-4">Retroalimentación por IA</h2>
-        <h4 class="subtitulo">Examen: {{ examen.nombre }}</h4>
+        <h4 class="subtitulo">Examen</h4>
         <h5 class="subtitulo">Estudiante: {{ estudiante.get_full_name|default:estudiante.username }}</h5>
 
         <p class="info-text mt-2">Número de preguntas respondidas: {{ numero_de_preguntas }}</p>
